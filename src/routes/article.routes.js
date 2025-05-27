@@ -12,11 +12,11 @@ const { validateComment } = require('../middlewares/validate');
 router
   .route('/')
   .post(validateArticle, articleController.createArticle)
-  .get(articleController.getArticleList);
+  .get(articleController.getArticles);
 
 router
   .route('/:id')
-  .get(articleController.getArticleById)
+  .get(articleController.getArticles)
   .patch(articleController.updateArticle)
   .delete(articleController.deleteArticle);
 
