@@ -236,7 +236,68 @@
 
 #### 3.1 댓글 등록
 
-- **URL** `https://two-sprint-mission3-market-backend.onrender.com/products/1/comments`
+- **URL** `https://two-sprint-mission3-market-backend.onrender.com/articles/2/comments`
 
 - **메서드:** `POST`
 
+- **요청 바디 (JSON):**
+```json
+{
+  "content": "이 상품 정말 마음에 들어요!"
+}
+```
+
+- **성공 응답 (201 Created):**
+```json
+{
+    "id": 1,
+    "content": "이 상품 정말 마음에 들어요!",
+    "createdAt": "2025-05-27T10:39:30.339Z",
+    "updatedAt": "2025-05-27T10:39:30.339Z",
+    "productId": null,
+    "articleId": 2
+}
+```
+
+#### 3.2 댓글 목록
+
+- **URL** `https://two-sprint-mission3-market-backend.onrender.com/articles/2/comments`
+
+- **메서드:** `GET`
+
+- **성공 응답 (200 OK) :**
+```json
+[
+    {
+        "id": 1,
+        "content": "이 상품 정말 마음에 들어요!",
+        "createdAt": "2025-05-27T10:39:30.339Z",
+        "updatedAt": "2025-05-27T10:39:30.339Z",
+        "productId": null,
+        "articleId": 2
+    }
+]
+```
+
+#### 3.3 댓글 수정
+
+- **URL**
+
+- **메서드:** `PATCH`
+
+- **요청 바디 (JSON):**
+```json
+{
+  "content": "수정된 댓글 내용입니다!"
+}
+```
+
+- **성공 응답
+
+#### 3.4 댓글 삭제
+
+- **URL**
+
+- **메서드:** `DELETE`
+
+- **성공 응답

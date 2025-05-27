@@ -24,4 +24,7 @@ router
 router.post('/:productId/comments', validateComment, commentController.createProductComment); // 여기가 문제의 21번째 줄입니다.
 router.get('/:productId/comments', commentController.getProductComments);
 
+// 상품에 종속된 댓글 수정/삭제 라우트를 연결
+router.use('/:productId/comments', commentRoutes);
+
 module.exports = router;
