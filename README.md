@@ -281,23 +281,51 @@
 
 #### 3.3 댓글 수정
 
-- **URL**
+- **URL** `https://two-sprint-mission3-market-backend.onrender.com/articles/2/comments/3`
 
 - **메서드:** `PATCH`
 
 - **요청 바디 (JSON):**
 ```json
 {
-  "content": "수정된 댓글 내용입니다!"
+  "content": "이것은 2번 게시글의 3번 댓글에 대한 최종 수정 내용입니다!"
 }
 ```
 
-- **성공 응답
+- **성공 응답 (200 OK):**
+```json
+{
+    "id": 3,
+    "content": "이것은 2번 게시글의 3번 댓글에 대한 최종 수정 내용입니다!",
+    "createdAt": "2025-05-27T10:52:01.220Z",
+    "updatedAt": "2025-05-27T11:00:28.681Z",
+    "productId": null,
+    "articleId": 2
+}
+```
 
 #### 3.4 댓글 삭제
 
-- **URL**
+- **URL** `https://two-sprint-mission3-market-backend.onrender.com/articles/2/comments/3`
 
 - **메서드:** `DELETE`
 
-- **성공 응답
+- **성공 응답 (204 No Content):**
+
+
+### 4. 이미지 API
+
+#### 4.1 이미지 업로드
+
+- **URL** `https://two-sprint-mission3-market-backend.onrender.com/api/upload`
+
+- **메서드:** `POST`
+
+- **성공 응답 (200 OK):**
+```json
+{
+    "message": "이미지 업로드 성공!",
+    "fileName": "1748343918210-P20180815_132404734_438A3C67-C042-440B-A817-4AB047A3C41D.PNG",
+    "filePath": "/uploads/1748343918210-P20180815_132404734_438A3C67-C042-440B-A817-4AB047A3C41D.PNG"
+}
+```
