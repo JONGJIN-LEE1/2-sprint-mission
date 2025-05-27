@@ -10,7 +10,7 @@ router
 
 router
   .route('/:id')
-  .get(articleController.getArticleById)
+  .get(articleController.getArticle)
   .patch(validateArticle, articleController.updateArticle)
   .delete(articleController.deleteArticle);
 
