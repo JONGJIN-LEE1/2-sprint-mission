@@ -6,7 +6,7 @@ const { validateProduct } = require('../middlewares/validate');
 router
   .route('/')
   .post(validateProduct, productController.createProduct)
-  .get(productController.getProducts); //목록 조회
+  .get(productController.getProductList); //목록 조회
 
 router
   .route('/:id')
