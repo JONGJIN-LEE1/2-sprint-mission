@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction, RequestHandler, ErrorRequestHandler } from 'express';
 import { StructError } from 'superstruct';
 import BadRequestError from '../lib/errors/BadRequestError.js';
 import NotFoundError from '../lib/errors/NotFoundError.js';
@@ -8,37 +8,43 @@ interface PrismaError extends Error {
   code?: string;
 }
 
-export function defaultNotFoundHandler(req: Request, res: Response, next: NextFunction) {
-  return res.status(404).send({ message: 'Not found' });
-}
-
-export function globalErrorHandler(
-  err: Error | PrismaError | SyntaxError,
+// ✅ 타입 명시 + 반환 타입 void
+export const defaultNotFoundHandler: RequestHandler = (
   req: Request,
   res: Response,
   next: NextFunction,
-) {
-  /** From superstruct or application error */
+): void => {
+  res.status(404).send({ message: 'Not found' });
+};
+
+// ✅ 타입 명시 + 반환 타입 void
+export const globalErrorHandler: ErrorRequestHandler = (
+  err: any,
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): void => {
   if (err instanceof StructError || err instanceof BadRequestError) {
-    return res.status(400).send({ message: err.message });
+    res.status(400).send({ message: err.message });
+    return;
   }
 
-  /** From express.json middleware */
   if (err instanceof SyntaxError && 'status' in err && err.status === 400 && 'body' in err) {
-    return res.status(400).send({ message: 'Invalid JSON' });
+    res.status(400).send({ message: 'Invalid JSON' });
+    return;
   }
 
-  /** Prisma error codes */
   if ('code' in err && err.code) {
     console.error(err);
-    return res.status(500).send({ message: 'Failed to process data' });
+    res.status(500).send({ message: 'Failed to process data' });
+    return;
   }
 
-  /** Application error */
   if (err instanceof NotFoundError) {
-    return res.status(404).send({ message: err.message });
+    res.status(404).send({ message: err.message });
+    return;
   }
 
   console.error(err);
-  return res.status(500).send({ message: 'Internal server error' });
-}
+  res.status(500).send({ message: 'Internal server error' });
+};
