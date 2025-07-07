@@ -1,6 +1,6 @@
 import express from 'express';
-import { signup, login, refreshToken, logout } from '../controllers/authController.js';
-import { withAsync } from '../lib/withAsync.js';
+import { signup, login, refreshToken, logout } from '../controllers/authController.ts';
+import { withAsync } from '../lib/withAsync.ts';
 
 const authRouter = express.Router();
 

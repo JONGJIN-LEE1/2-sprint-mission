@@ -1,4 +1,4 @@
-import { prismaClient } from '../lib/prismaClient.js';
+import { prismaClient } from '../lib/prismaClient.ts';
 import BadRequestError from '../lib/errors/BadRequestError.js';
 import NotFoundError from '../lib/errors/NotFoundError.js';
 

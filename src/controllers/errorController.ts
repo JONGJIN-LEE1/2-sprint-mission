@@ -12,7 +12,7 @@ export function globalErrorHandler(err, req, res, next) {
     return res.status(400).send({ message: err.message });
   }
 
-  /** From express.json middleware */
+  /** From express.tson middleware */
   if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
     return res.status(400).send({ message: 'Invalid JSON' });
   }

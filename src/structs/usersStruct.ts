@@ -1,5 +1,5 @@
 import { object, string, nonempty, coerce, refine, nullable } from 'superstruct';
-import { PageParamsStruct } from './commonStructs.js';
+import { PageParamsStruct } from './commonStructs.ts';
 
 // 유저 정보 수정
 export const UpdateUserBodyStruct = object({

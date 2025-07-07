@@ -1,7 +1,7 @@
 import { create } from 'superstruct';
-import { prismaClient } from '../lib/prismaClient.js';
+import { prismaClient } from '../lib/prismaClient.ts';
 import NotFoundError from '../lib/errors/NotFoundError.js';
-import { IdParamsStruct } from '../structs/commonStructs.js';
+import { IdParamsStruct } from '../structs/commonStructs.ts';
 
 // 상품 좋아요 토글
 export async function toggleProductLike(req, res) {
@@ -32,13 +32,13 @@ export async function toggleProductLike(req, res) {
     await prismaClient.productLike.delete({
       where: { id: existingLike.id },
     });
-    return res.json({ isLiked: false });
+    return res.tson({ isLiked: false });
   } else {
     // 좋아요 추가
     await prismaClient.productLike.create({
       data: { userId, productId },
     });
-    return res.json({ isLiked: true });
+    return res.tson({ isLiked: true });
   }
 }
 
@@ -71,12 +71,12 @@ export async function toggleArticleLike(req, res) {
     await prismaClient.articleLike.delete({
       where: { id: existingLike.id },
     });
-    return res.json({ isLiked: false });
+    return res.tson({ isLiked: false });
   } else {
     // 좋아요 추가
     await prismaClient.articleLike.create({
       data: { userId, articleId },
     });
-    return res.json({ isLiked: true });
+    return res.tson({ isLiked: true });
   }
 }

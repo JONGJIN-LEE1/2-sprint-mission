@@ -1,12 +1,12 @@
 import { create } from 'superstruct';
 import bcrypt from 'bcrypt';
-import { prismaClient } from '../lib/prismaClient.js';
+import { prismaClient } from '../lib/prismaClient.ts';
 import BadRequestError from '../lib/errors/BadRequestError.js';
 import {
   UpdateUserBodyStruct,
   ChangePasswordBodyStruct,
   GetUserProductsParamsStruct,
-} from '../structs/usersStruct.js';
+} from '../structs/usersStruct.ts';
 
 // 자신의 정보 조회
 export async function getMyProfile(req, res) {

@@ -1,7 +1,7 @@
 import { create } from 'superstruct';
-import { prismaClient } from '../lib/prismaClient.js';
-import { UpdateCommentBodyStruct } from '../structs/commentsStruct.js';
-import { IdParamsStruct } from '../structs/commonStructs.js';
+import { prismaClient } from '../lib/prismaClient.ts';
+import { UpdateCommentBodyStruct } from '../structs/commentsStruct.ts';
+import { IdParamsStruct } from '../structs/commonStructs.ts';
 
 export async function updateComment(req, res) {
   const { id } = create(req.params, IdParamsStruct);

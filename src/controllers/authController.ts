@@ -2,8 +2,8 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { assert } from 'superstruct';
-import { prismaClient } from '../lib/prismaClient.js';
-import { SignupStruct, LoginStruct, RefreshTokenStruct } from '../structs/authStructs.js';
+import { prismaClient } from '../lib/prismaClient.ts';
+import { SignupStruct, LoginStruct, RefreshTokenStruct } from '../structs/authStructs.ts';
 import BadRequestError from '../lib/errors/BadRequestError.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
@@ -39,7 +39,7 @@ export const signup = async (req, res, next) => {
       },
     });
 
-    res.status(201).json(user);
+    res.status(201).tson(user);
   } catch (error) {
     next(error);
   }
@@ -85,7 +85,7 @@ export const login = async (req, res, next) => {
       },
     });
 
-    res.json({
+    res.tson({
       accessToken,
       refreshToken,
       user: { id: user.id, email: user.email, nickname: user.nickname, image: user.image },
@@ -119,7 +119,7 @@ export const refreshToken = async (req, res, next) => {
       { expiresIn: '15m' },
     );
 
-    res.json({
+    res.tson({
       accessToken,
       user: {
         id: storedToken.user.id,
@@ -145,7 +145,7 @@ export const logout = async (req, res, next) => {
       });
     }
 
-    res.json({ message: '로그아웃되었습니다.' });
+    res.tson({ message: '로그아웃되었습니다.' });
   } catch (error) {
     next(error);
   }

@@ -1,13 +1,13 @@
 import express from 'express';
-import { withAsync } from '../lib/withAsync.js';
-import { authenticateToken } from '../middlewares/authMiddleware.js';
+import { withAsync } from '../lib/withAsync.ts';
+import { authenticateToken } from '../middlewares/authMiddleware.ts';
 import {
   getMyProfile,
   updateMyProfile,
   changePassword,
   getMyProducts,
   getMyLikedProducts, // 추가
-} from '../controllers/usersController.js';
+} from '../controllers/usersController.ts';
 
 const usersRouter = express.Router();
 

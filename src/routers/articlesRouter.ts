@@ -1,7 +1,7 @@
 import express from 'express';
-import { withAsync } from '../lib/withAsync.js';
-import { authenticateToken } from '../middlewares/authMiddleware.js';
-import { checkArticleOwnership } from '../middlewares/articleAuthMiddleware.js';
+import { withAsync } from '../lib/withAsync.ts';
+import { authenticateToken } from '../middlewares/authMiddleware.ts';
+import { checkArticleOwnership } from '../middlewares/articleAuthMiddleware.ts';
 import {
   createArticle,
   getArticleList,
@@ -10,7 +10,7 @@ import {
   deleteArticle,
   createComment,
   getCommentList,
-} from '../controllers/articlesController.js';
+} from '../controllers/articlesController.ts';
 
 const articlesRouter = express.Router();
 

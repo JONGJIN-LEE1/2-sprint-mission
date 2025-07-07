@@ -1,18 +1,19 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
-import { PORT, PUBLIC_PATH, STATIC_PATH } from './lib/constants.js';
-import articlesRouter from './routers/articlesRouter.js';
-import productsRouter from './routers/productsRouter.js';
-import commentsRouter from './routers/commentsRouter.js';
-import imagesRouter from './routers/imagesRouter.js';
-import authRouter from './routers/authRouter.js'; // 추가
-import usersRouter from './routers/usersRouter.js'; // 추가
-import likesRouter from './routers/likesRouter.js'; // 추가
+import { PORT, PUBLIC_PATH, STATIC_PATH } from './lib/constants.ts';
+import articlesRouter from './routers/articlesRouter.ts';
+import productsRouter from './routers/productsRouter.ts';
+import commentsRouter from './routers/commentsRouter.ts';
+import imagesRouter from './routers/imagesRouter.ts';
+import authRouter from './routers/authRouter.ts'; // 추가
+import usersRouter from './routers/usersRouter.ts'; // 추가
+import likesRouter from './routers/likesRouter.ts'; // 추가
 
-import { defaultNotFoundHandler, globalErrorHandler } from './controllers/errorController.js';
+import { defaultNotFoundHandler, globalErrorHandler } from './controllers/errorController.ts';
 
 const app = express();
+const PORT = 3000;
 
 app.use(cors());
 app.use(express.json());

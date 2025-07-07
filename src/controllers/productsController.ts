@@ -1,13 +1,13 @@
 import { create } from 'superstruct';
-import { prismaClient } from '../lib/prismaClient.js';
+import { prismaClient } from '../lib/prismaClient.ts';
 import NotFoundError from '../lib/errors/NotFoundError.js';
-import { IdParamsStruct } from '../structs/commonStructs.js';
+import { IdParamsStruct } from '../structs/commonStructs.ts';
 import {
   CreateProductBodyStruct,
   GetProductListParamsStruct,
   UpdateProductBodyStruct,
-} from '../structs/productsStruct.js';
-import { CreateCommentBodyStruct, GetCommentListParamsStruct } from '../structs/commentsStruct.js';
+} from '../structs/productsStruct.ts';
+import { CreateCommentBodyStruct, GetCommentListParamsStruct } from '../structs/commentsStruct.ts';
 
 export async function createProduct(req, res) {
   const { name, description, price, tags, images } = create(req.body, CreateProductBodyStruct);
