@@ -1,21 +1,23 @@
+import { Response } from 'express';
 import { create } from 'superstruct';
-import { prismaClient } from '../lib/prismaClient';
-import NotFoundError from '../lib/errors/NotFoundError';
-import { IdParamsStruct } from '../structs/commonStructs';
+import { prismaClient } from '../lib/prismaClient.js';
+import NotFoundError from '../lib/errors/NotFoundError.js';
+import { IdParamsStruct } from '../structs/commonStructs.js';
 import {
   CreateArticleBodyStruct,
   UpdateArticleBodyStruct,
   GetArticleListParamsStruct,
-} from '../structs/articlesStructs';
-import { CreateCommentBodyStruct, GetCommentListParamsStruct } from '../structs/commentsStruct';
+} from '../structs/articlesStructs.js';
+import { CreateCommentBodyStruct, GetCommentListParamsStruct } from '../structs/commentsStruct.js';
+import { AuthenticatedRequest } from '../middlewares/authMiddleware.js';
 
-export async function createArticle(req, res) {
+export async function createArticle(req: AuthenticatedRequest, res: Response) {
   const data = create(req.body, CreateArticleBodyStruct);
 
   const article = await prismaClient.article.create({
     data: {
       ...data,
-      userId: req.user.id, // 로그인한 사용자 ID 추가
+      userId: req.user!.id, // 로그인한 사용자 ID 추가
     },
     include: { user: { select: { id: true, nickname: true, image: true } } },
   });
@@ -23,7 +25,7 @@ export async function createArticle(req, res) {
   return res.status(201).send(article);
 }
 
-export async function getArticle(req, res) {
+export async function getArticle(req: AuthenticatedRequest, res: Response) {
   const { id } = create(req.params, IdParamsStruct);
   const userId = req.user?.id; // 로그인하지 않은 경우도 고려
 
@@ -68,7 +70,7 @@ export async function getArticle(req, res) {
   });
 }
 
-export async function updateArticle(req, res) {
+export async function updateArticle(req: AuthenticatedRequest, res: Response) {
   const { id } = create(req.params, IdParamsStruct);
   const data = create(req.body, UpdateArticleBodyStruct);
 
@@ -81,7 +83,7 @@ export async function updateArticle(req, res) {
   return res.send(article);
 }
 
-export async function deleteArticle(req, res) {
+export async function deleteArticle(req: AuthenticatedRequest, res: Response) {
   const { id } = create(req.params, IdParamsStruct);
 
   await prismaClient.article.delete({ where: { id } });
@@ -89,7 +91,7 @@ export async function deleteArticle(req, res) {
   return res.status(204).send();
 }
 
-export async function getArticleList(req, res) {
+export async function getArticleList(req: AuthenticatedRequest, res: Response) {
   const { page, pageSize, orderBy, keyword } = create(req.query, GetArticleListParamsStruct);
 
   const where = { title: keyword ? { contains: keyword } : undefined };
@@ -106,7 +108,7 @@ export async function getArticleList(req, res) {
   return res.send({ list: articles, totalCount });
 }
 
-export async function createComment(req, res) {
+export async function createComment(req: AuthenticatedRequest, res: Response) {
   const { id: articleId } = create(req.params, IdParamsStruct);
   const { content } = create(req.body, CreateCommentBodyStruct);
 
@@ -119,7 +121,7 @@ export async function createComment(req, res) {
     data: {
       articleId,
       content,
-      userId: req.user.id, // 추가
+      userId: req.user!.id, // 추가
     },
     include: { user: { select: { id: true, nickname: true, image: true } } },
   });
@@ -127,7 +129,7 @@ export async function createComment(req, res) {
   return res.status(201).send(comment);
 }
 
-export async function getCommentList(req, res) {
+export async function getCommentList(req: AuthenticatedRequest, res: Response) {
   const { id: articleId } = create(req.params, IdParamsStruct);
   const { cursor, limit } = create(req.query, GetCommentListParamsStruct);
 

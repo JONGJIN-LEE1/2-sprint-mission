@@ -1,24 +1,35 @@
+import { Request, Response, NextFunction } from 'express';
 import { StructError } from 'superstruct';
 import BadRequestError from '../lib/errors/BadRequestError.js';
 import NotFoundError from '../lib/errors/NotFoundError.js';
-// eslint-disable-next-line no-unused-vars
-export function defaultNotFoundHandler(req, res, next) {
+
+// Prisma 에러 타입 (필요시 더 정확한 타입으로 교체)
+interface PrismaError extends Error {
+  code?: string;
+}
+
+export function defaultNotFoundHandler(req: Request, res: Response, next: NextFunction) {
   return res.status(404).send({ message: 'Not found' });
 }
-// eslint-disable-next-line no-unused-vars
-export function globalErrorHandler(err, req, res, next) {
+
+export function globalErrorHandler(
+  err: Error | PrismaError | SyntaxError,
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   /** From superstruct or application error */
   if (err instanceof StructError || err instanceof BadRequestError) {
     return res.status(400).send({ message: err.message });
   }
 
-  /** From express.tson middleware */
-  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+  /** From express.json middleware */
+  if (err instanceof SyntaxError && 'status' in err && err.status === 400 && 'body' in err) {
     return res.status(400).send({ message: 'Invalid JSON' });
   }
 
   /** Prisma error codes */
-  if (err.code) {
+  if ('code' in err && err.code) {
     console.error(err);
     return res.status(500).send({ message: 'Failed to process data' });
   }

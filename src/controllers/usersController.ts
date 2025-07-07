@@ -1,16 +1,18 @@
+import { Response } from 'express';
 import { create } from 'superstruct';
 import bcrypt from 'bcrypt';
-import { prismaClient } from '../lib/prismaClient.ts';
+import { prismaClient } from '../lib/prismaClient.js';
 import BadRequestError from '../lib/errors/BadRequestError.js';
 import {
   UpdateUserBodyStruct,
   ChangePasswordBodyStruct,
   GetUserProductsParamsStruct,
-} from '../structs/usersStruct.ts';
+} from '../structs/usersStruct.js';
+import { AuthenticatedRequest } from '../middlewares/authMiddleware.js';
 
 // 자신의 정보 조회
-export async function getMyProfile(req, res) {
-  const userId = req.user.id;
+export async function getMyProfile(req: AuthenticatedRequest, res: Response) {
+  const userId = req.user!.id;
 
   const user = await prismaClient.user.findUnique({
     where: { id: userId },
@@ -29,8 +31,8 @@ export async function getMyProfile(req, res) {
 }
 
 // 자신의 정보 수정
-export async function updateMyProfile(req, res) {
-  const userId = req.user.id;
+export async function updateMyProfile(req: AuthenticatedRequest, res: Response) {
+  const userId = req.user!.id;
   const { nickname, image } = create(req.body, UpdateUserBodyStruct);
 
   const updatedUser = await prismaClient.user.update({
@@ -50,8 +52,8 @@ export async function updateMyProfile(req, res) {
 }
 
 // 비밀번호 변경
-export async function changePassword(req, res) {
-  const userId = req.user.id;
+export async function changePassword(req: AuthenticatedRequest, res: Response) {
+  const userId = req.user!.id;
   const { currentPassword, newPassword } = create(req.body, ChangePasswordBodyStruct);
 
   // 현재 비밀번호 확인
@@ -59,6 +61,10 @@ export async function changePassword(req, res) {
     where: { id: userId },
     select: { password: true },
   });
+
+  if (!user) {
+    throw new BadRequestError('사용자를 찾을 수 없습니다.');
+  }
 
   const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
   if (!isPasswordValid) {
@@ -78,8 +84,8 @@ export async function changePassword(req, res) {
 }
 
 // 자신이 등록한 상품 목록 조회
-export async function getMyProducts(req, res) {
-  const userId = req.user.id;
+export async function getMyProducts(req: AuthenticatedRequest, res: Response) {
+  const userId = req.user!.id;
   const { page, pageSize, orderBy, keyword } = create(req.query, GetUserProductsParamsStruct);
 
   const where = {
@@ -111,8 +117,8 @@ export async function getMyProducts(req, res) {
 }
 
 // 좋아요한 상품 목록 조회
-export async function getMyLikedProducts(req, res) {
-  const userId = req.user.id;
+export async function getMyLikedProducts(req: AuthenticatedRequest, res: Response) {
+  const userId = req.user!.id;
   const { page, pageSize, orderBy } = create(req.query, GetUserProductsParamsStruct);
 
   const where = {

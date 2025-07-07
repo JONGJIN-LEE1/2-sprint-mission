@@ -1,12 +1,14 @@
+import { Response } from 'express';
 import { create } from 'superstruct';
-import { prismaClient } from '../lib/prismaClient.ts';
+import { prismaClient } from '../lib/prismaClient.js';
 import NotFoundError from '../lib/errors/NotFoundError.js';
-import { IdParamsStruct } from '../structs/commonStructs.ts';
+import { IdParamsStruct } from '../structs/commonStructs.js';
+import { AuthenticatedRequest } from '../middlewares/authMiddleware.js';
 
 // 상품 좋아요 토글
-export async function toggleProductLike(req, res) {
+export async function toggleProductLike(req: AuthenticatedRequest, res: Response) {
   const { id: productId } = create(req.params, IdParamsStruct);
-  const userId = req.user.id;
+  const userId = req.user!.id;
 
   // 상품 존재 확인
   const product = await prismaClient.product.findUnique({
@@ -32,20 +34,20 @@ export async function toggleProductLike(req, res) {
     await prismaClient.productLike.delete({
       where: { id: existingLike.id },
     });
-    return res.tson({ isLiked: false });
+    return res.json({ isLiked: false });
   } else {
     // 좋아요 추가
     await prismaClient.productLike.create({
       data: { userId, productId },
     });
-    return res.tson({ isLiked: true });
+    return res.json({ isLiked: true });
   }
 }
 
 // 게시글 좋아요 토글
-export async function toggleArticleLike(req, res) {
+export async function toggleArticleLike(req: AuthenticatedRequest, res: Response) {
   const { id: articleId } = create(req.params, IdParamsStruct);
-  const userId = req.user.id;
+  const userId = req.user!.id;
 
   // 게시글 존재 확인
   const article = await prismaClient.article.findUnique({
@@ -71,12 +73,12 @@ export async function toggleArticleLike(req, res) {
     await prismaClient.articleLike.delete({
       where: { id: existingLike.id },
     });
-    return res.tson({ isLiked: false });
+    return res.json({ isLiked: false });
   } else {
     // 좋아요 추가
     await prismaClient.articleLike.create({
       data: { userId, articleId },
     });
-    return res.tson({ isLiked: true });
+    return res.json({ isLiked: true });
   }
 }

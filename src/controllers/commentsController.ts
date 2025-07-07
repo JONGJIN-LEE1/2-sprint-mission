@@ -1,9 +1,11 @@
+import { Response } from 'express';
 import { create } from 'superstruct';
-import { prismaClient } from '../lib/prismaClient.ts';
-import { UpdateCommentBodyStruct } from '../structs/commentsStruct.ts';
-import { IdParamsStruct } from '../structs/commonStructs.ts';
+import { prismaClient } from '../lib/prismaClient.js';
+import { UpdateCommentBodyStruct } from '../structs/commentsStruct.js';
+import { IdParamsStruct } from '../structs/commonStructs.js';
+import { AuthenticatedRequest } from '../middlewares/authMiddleware.js';
 
-export async function updateComment(req, res) {
+export async function updateComment(req: AuthenticatedRequest, res: Response) {
   const { id } = create(req.params, IdParamsStruct);
   const { content } = create(req.body, UpdateCommentBodyStruct);
 
@@ -16,7 +18,7 @@ export async function updateComment(req, res) {
   return res.send(updatedComment);
 }
 
-export async function deleteComment(req, res) {
+export async function deleteComment(req: AuthenticatedRequest, res: Response) {
   const { id } = create(req.params, IdParamsStruct);
 
   await prismaClient.comment.delete({ where: { id } });

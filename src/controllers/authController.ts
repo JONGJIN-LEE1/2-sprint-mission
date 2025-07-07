@@ -1,15 +1,16 @@
+import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { assert } from 'superstruct';
-import { prismaClient } from '../lib/prismaClient.ts';
-import { SignupStruct, LoginStruct, RefreshTokenStruct } from '../structs/authStructs.ts';
+import { prismaClient } from '../lib/prismaClient.js';
+import { SignupStruct, LoginStruct, RefreshTokenStruct } from '../structs/authStructs.js';
 import BadRequestError from '../lib/errors/BadRequestError.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const SALT_ROUNDS = 10;
 
-export const signup = async (req, res, next) => {
+export const signup = async (req: Request, res: Response, next: NextFunction) => {
   try {
     // 요청 데이터 검증
     assert(req.body, SignupStruct);
@@ -39,13 +40,13 @@ export const signup = async (req, res, next) => {
       },
     });
 
-    res.status(201).tson(user);
+    res.status(201).json(user);
   } catch (error) {
     next(error);
   }
 };
 
-export const login = async (req, res, next) => {
+export const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
     // 요청 데이터 검증
     assert(req.body, LoginStruct);
@@ -85,7 +86,7 @@ export const login = async (req, res, next) => {
       },
     });
 
-    res.tson({
+    res.json({
       accessToken,
       refreshToken,
       user: { id: user.id, email: user.email, nickname: user.nickname, image: user.image },
@@ -96,7 +97,7 @@ export const login = async (req, res, next) => {
 };
 
 // Token 갱신 함수 추가
-export const refreshToken = async (req, res, next) => {
+export const refreshToken = async (req: Request, res: Response, next: NextFunction) => {
   try {
     assert(req.body, RefreshTokenStruct);
 
@@ -119,7 +120,7 @@ export const refreshToken = async (req, res, next) => {
       { expiresIn: '15m' },
     );
 
-    res.tson({
+    res.json({
       accessToken,
       user: {
         id: storedToken.user.id,
@@ -134,7 +135,7 @@ export const refreshToken = async (req, res, next) => {
 };
 
 // 로그아웃 함수 추가
-export const logout = async (req, res, next) => {
+export const logout = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { refreshToken } = req.body;
 
@@ -145,7 +146,7 @@ export const logout = async (req, res, next) => {
       });
     }
 
-    res.tson({ message: '로그아웃되었습니다.' });
+    res.json({ message: '로그아웃되었습니다.' });
   } catch (error) {
     next(error);
   }

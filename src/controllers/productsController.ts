@@ -1,15 +1,17 @@
+import { Response } from 'express';
 import { create } from 'superstruct';
-import { prismaClient } from '../lib/prismaClient.ts';
+import { prismaClient } from '../lib/prismaClient.js';
 import NotFoundError from '../lib/errors/NotFoundError.js';
-import { IdParamsStruct } from '../structs/commonStructs.ts';
+import { IdParamsStruct } from '../structs/commonStructs.js';
 import {
   CreateProductBodyStruct,
   GetProductListParamsStruct,
   UpdateProductBodyStruct,
-} from '../structs/productsStruct.ts';
-import { CreateCommentBodyStruct, GetCommentListParamsStruct } from '../structs/commentsStruct.ts';
+} from '../structs/productsStruct.js';
+import { CreateCommentBodyStruct, GetCommentListParamsStruct } from '../structs/commentsStruct.js';
+import { AuthenticatedRequest } from '../middlewares/authMiddleware.js';
 
-export async function createProduct(req, res) {
+export async function createProduct(req: AuthenticatedRequest, res: Response) {
   const { name, description, price, tags, images } = create(req.body, CreateProductBodyStruct);
 
   const product = await prismaClient.product.create({
@@ -19,7 +21,7 @@ export async function createProduct(req, res) {
       price,
       tags,
       images,
-      userId: req.user.id, // 로그인한 사용자 ID 추가
+      userId: req.user!.id, // 로그인한 사용자 ID 추가
     },
     include: { user: { select: { id: true, nickname: true, image: true } } },
   });
@@ -28,7 +30,7 @@ export async function createProduct(req, res) {
 }
 
 // getProduct 함수 수정
-export async function getProduct(req, res) {
+export async function getProduct(req: AuthenticatedRequest, res: Response) {
   const { id } = create(req.params, IdParamsStruct);
   const userId = req.user?.id; // 로그인하지 않은 경우도 고려
 
@@ -73,7 +75,7 @@ export async function getProduct(req, res) {
   });
 }
 
-export async function updateProduct(req, res) {
+export async function updateProduct(req: AuthenticatedRequest, res: Response) {
   const { id } = create(req.params, IdParamsStruct);
   const { name, description, price, tags, images } = create(req.body, UpdateProductBodyStruct);
 
@@ -86,7 +88,7 @@ export async function updateProduct(req, res) {
   return res.send(updatedProduct);
 }
 
-export async function deleteProduct(req, res) {
+export async function deleteProduct(req: AuthenticatedRequest, res: Response) {
   const { id } = create(req.params, IdParamsStruct);
 
   await prismaClient.product.delete({ where: { id } });
@@ -94,7 +96,7 @@ export async function deleteProduct(req, res) {
   return res.status(204).send();
 }
 
-export async function getProductList(req, res) {
+export async function getProductList(req: AuthenticatedRequest, res: Response) {
   const { page, pageSize, orderBy, keyword } = create(req.query, GetProductListParamsStruct);
 
   const where = keyword
@@ -112,7 +114,7 @@ export async function getProductList(req, res) {
   return res.send({ list: products, totalCount });
 }
 
-export async function createComment(req, res) {
+export async function createComment(req: AuthenticatedRequest, res: Response) {
   const { id: productId } = create(req.params, IdParamsStruct);
   const { content } = create(req.body, CreateCommentBodyStruct);
 
@@ -125,7 +127,7 @@ export async function createComment(req, res) {
     data: {
       productId,
       content,
-      userId: req.user.id, // 추가
+      userId: req.user!.id, // 추가
     },
     include: { user: { select: { id: true, nickname: true, image: true } } },
   });
@@ -133,7 +135,7 @@ export async function createComment(req, res) {
   return res.status(201).send(comment);
 }
 
-export async function getCommentList(req, res) {
+export async function getCommentList(req: AuthenticatedRequest, res: Response) {
   const { id: productId } = create(req.params, IdParamsStruct);
   const { cursor, limit } = create(req.query, GetCommentListParamsStruct);
 
