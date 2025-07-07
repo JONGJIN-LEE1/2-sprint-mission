@@ -1,4 +1,14 @@
-import { coerce, integer, object, string, defaulted, optional, enums, nonempty } from 'superstruct';
+import {
+  coerce,
+  integer,
+  object,
+  string,
+  defaulted,
+  optional,
+  enums,
+  nonempty,
+  Infer,
+} from 'superstruct';
 
 /** Convert string to integer then validate it */
 const integerString = coerce(integer(), string(), (value) => parseInt(value));
@@ -20,3 +30,8 @@ export const CursorParamsStruct = object({
   orderBy: optional(enums(['recent'])),
   keyword: optional(nonempty(string())),
 });
+
+// 타입 export 추가
+export type IdParams = Infer<typeof IdParamsStruct>;
+export type PageParams = Infer<typeof PageParamsStruct>;
+export type CursorParams = Infer<typeof CursorParamsStruct>;

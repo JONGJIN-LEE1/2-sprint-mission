@@ -1,4 +1,4 @@
-import { object, string, size } from 'superstruct';
+import { object, string, size, Infer } from 'superstruct';
 
 export const SignupStruct = object({
   email: size(string(), 1, 255),
@@ -15,3 +15,8 @@ export const LoginStruct = object({
 export const RefreshTokenStruct = object({
   refreshToken: string(),
 });
+
+// 타입 export 추가
+export type SignupData = Infer<typeof SignupStruct>;
+export type LoginData = Infer<typeof LoginStruct>;
+export type RefreshTokenData = Infer<typeof RefreshTokenStruct>;

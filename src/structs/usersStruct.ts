@@ -1,5 +1,5 @@
-import { object, string, nonempty, coerce, refine, nullable } from 'superstruct';
-import { PageParamsStruct } from './commonStructs.ts';
+import { object, string, nonempty, coerce, refine, nullable, Infer } from 'superstruct';
+import { PageParamsStruct } from './commonStructs';
 
 // 유저 정보 수정
 export const UpdateUserBodyStruct = object({
@@ -15,3 +15,8 @@ export const ChangePasswordBodyStruct = object({
 
 // 유저의 상품 목록 조회
 export const GetUserProductsParamsStruct = PageParamsStruct;
+
+// 타입 export 추가
+export type UpdateUserBody = Infer<typeof UpdateUserBodyStruct>;
+export type ChangePasswordBody = Infer<typeof ChangePasswordBodyStruct>;
+export type GetUserProductsParams = Infer<typeof GetUserProductsParamsStruct>;
