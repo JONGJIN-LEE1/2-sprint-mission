@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { prismaClient } from '../lib/prismaClient';
-import BadRequestError from '../lib/errors/BadRequestError';
+import { prismaClient } from '../lib/prismaClient.js';
+import BadRequestError from '../lib/errors/BadRequestError.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 

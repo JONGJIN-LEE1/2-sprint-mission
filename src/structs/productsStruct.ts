@@ -1,5 +1,5 @@
 import { coerce, partial, object, string, min, nonempty, array, integer, Infer } from 'superstruct';
-import { PageParamsStruct } from './commonStructs';
+import { PageParamsStruct } from './commonStructs.js';
 
 export const CreateProductBodyStruct = object({
   name: coerce(nonempty(string()), string(), (value) => value.trim()),

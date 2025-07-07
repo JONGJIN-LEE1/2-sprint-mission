@@ -1,8 +1,8 @@
 import { Response, NextFunction } from 'express';
-import { prismaClient } from '../lib/prismaClient';
-import BadRequestError from '../lib/errors/BadRequestError';
-import NotFoundError from '../lib/errors/NotFoundError';
-import { AuthenticatedRequest } from './authMiddleware';
+import { prismaClient } from '../lib/prismaClient.js';
+import BadRequestError from '../lib/errors/BadRequestError.js';
+import NotFoundError from '../lib/errors/NotFoundError.js';
+import { AuthenticatedRequest } from './authMiddleware.js';
 
 export const checkProductOwnership = async (
   req: AuthenticatedRequest,
