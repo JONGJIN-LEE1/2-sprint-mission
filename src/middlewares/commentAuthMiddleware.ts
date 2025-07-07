@@ -1,11 +1,22 @@
-import { prismaClient } from '../lib/prismaClient.ts';
-import BadRequestError from '../lib/errors/BadRequestError.js';
-import NotFoundError from '../lib/errors/NotFoundError.js';
+import { Response, NextFunction } from 'express';
+import { prismaClient } from '../lib/prismaClient';
+import BadRequestError from '../lib/errors/BadRequestError';
+import NotFoundError from '../lib/errors/NotFoundError';
+import { AuthenticatedRequest } from './authMiddleware';
 
-export const checkCommentOwnership = async (req, res, next) => {
+export const checkCommentOwnership = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
   try {
     const commentId = parseInt(req.params.id);
-    const userId = req.user.id;
+    const userId = req.user?.id;
+
+    // user가 없는 경우 처리
+    if (!userId) {
+      throw new BadRequestError('인증되지 않은 사용자입니다.');
+    }
 
     // 댓글 조회
     const comment = await prismaClient.comment.findUnique({
