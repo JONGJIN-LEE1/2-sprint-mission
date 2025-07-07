@@ -1,9 +1,16 @@
 {
   "type": "module",
   "scripts": {
-    "dev": "nodemon --watch 'src/**/*.ts' --exec ts-node src/main.ts",
+    "dev": "nodemon",
     "build": "tsc",
     "start": "node dist/main.js"
+  },
+  "nodemonConfig": {
+    "watch": [
+      "src"
+    ],
+    "ext": "ts",
+    "exec": "tsx src/main.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",
@@ -24,6 +31,7 @@
     "prettier": "^3.6.0",
     "prisma": "^5.16.2",
     "ts-node": "^10.9.2",
+    "tsx": "^4.20.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.35.1"
   },
