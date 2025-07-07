@@ -1,7 +1,7 @@
 import express from 'express';
-import { withAsync } from '../lib/withAsync.ts';
-import { authenticateToken } from '../middlewares/authMiddleware.ts';
-import { toggleProductLike, toggleArticleLike } from '../controllers/likesController.ts';
+import { withAsync } from '../lib/withAsync.js';
+import { authenticateToken } from '../middlewares/authMiddleware.js';
+import { toggleProductLike, toggleArticleLike } from '../controllers/likesController.js';
 
 const likesRouter = express.Router();
 

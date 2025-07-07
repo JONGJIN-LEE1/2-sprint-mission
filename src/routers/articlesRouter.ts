@@ -1,42 +1,32 @@
 import express from 'express';
-import { withAsync } from '../lib/withAsync.ts';
-import { authenticateToken } from '../middlewares/authMiddleware.ts';
-import { checkArticleOwnership } from '../middlewares/articleAuthMiddleware.ts';
+import { withAsync } from '../lib/withAsync.js';
+import { authenticateToken } from '../middlewares/authMiddleware.js';
 import {
-  createArticle,
-  getArticleList,
-  getArticle,
-  updateArticle,
-  deleteArticle,
-  createComment,
-  getCommentList,
-} from '../controllers/articlesController.ts';
+  getMyProfile,
+  updateMyProfile,
+  changePassword,
+  getMyProducts,
+  getMyLikedProducts, // 추가
+} from '../controllers/usersController.js';
 
-const articlesRouter = express.Router();
+const usersRouter = express.Router();
 
-// 공개 라우트 (인증 불필요)
-articlesRouter.get('/', withAsync(getArticleList));
-articlesRouter.get('/:id', withAsync(getArticle));
-articlesRouter.get('/:id/comments', withAsync(getCommentList));
+// 모든 라우트는 인증이 필요함
+usersRouter.use(authenticateToken);
 
-// 인증 필요한 라우트
-articlesRouter.post('/', authenticateToken, withAsync(createArticle));
+// 자신의 정보 조회
+usersRouter.get('/me', withAsync(getMyProfile));
 
-// 소유자 확인 필요한 라우트
-articlesRouter.patch(
-  '/:id',
-  authenticateToken,
-  withAsync(checkArticleOwnership),
-  withAsync(updateArticle),
-);
-articlesRouter.delete(
-  '/:id',
-  authenticateToken,
-  withAsync(checkArticleOwnership),
-  withAsync(deleteArticle),
-);
+// 자신의 정보 수정
+usersRouter.patch('/me', withAsync(updateMyProfile));
 
-// 댓글 작성도 인증 필요
-articlesRouter.post('/:id/comments', authenticateToken, withAsync(createComment));
+// 비밀번호 변경
+usersRouter.patch('/me/password', withAsync(changePassword));
 
-export default articlesRouter;
+// 자신이 등록한 상품 목록 조회
+usersRouter.get('/me/products', withAsync(getMyProducts));
+
+// 좋아요한 상품 목록 조회
+usersRouter.get('/me/liked-products', withAsync(getMyLikedProducts));
+
+export default usersRouter;
