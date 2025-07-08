@@ -1,7 +1,7 @@
 import express from 'express';
-import { withAsync } from '../lib/withAsync.js';
-import { authenticateToken } from '../middlewares/authMiddleware.js';
-import { checkProductOwnership } from '../middlewares/productAuthMiddleware.js';
+import { withAsync } from '../lib/withAsync';
+import { authenticateToken } from '../middlewares/authMiddleware';
+import { checkProductOwnership } from '../middlewares/productAuthMiddleware';
 import {
   createProduct,
   getProduct,
@@ -10,7 +10,7 @@ import {
   getProductList,
   createComment,
   getCommentList,
-} from '../controllers/productsController.js';
+} from '../controllers/productsController';
 
 const productsRouter = express.Router();
 

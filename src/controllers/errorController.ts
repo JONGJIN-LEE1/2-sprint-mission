@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction, RequestHandler, ErrorRequestHandler } from 'express';
 import { StructError } from 'superstruct';
-import BadRequestError from '../lib/errors/BadRequestError.js';
-import NotFoundError from '../lib/errors/NotFoundError.js';
+import BadRequestError from '../lib/errors/BadRequestError';
+import NotFoundError from '../lib/errors/NotFoundError';
 
 // Prisma 에러 타입 (필요시 더 정확한 타입으로 교체)
 interface PrismaError extends Error {

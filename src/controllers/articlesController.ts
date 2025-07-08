@@ -1,162 +1,73 @@
 import { Response } from 'express';
 import { create } from 'superstruct';
-import { prismaClient } from '../lib/prismaClient.js';
-import NotFoundError from '../lib/errors/NotFoundError.js';
-import { IdParamsStruct } from '../structs/commonStructs.js';
+import { articleService } from '../services/article.service';
+import { IdParamsStruct } from '../structs/commonStructs';
 import {
   CreateArticleBodyStruct,
   UpdateArticleBodyStruct,
   GetArticleListParamsStruct,
-} from '../structs/articlesStructs.js';
-import { CreateCommentBodyStruct, GetCommentListParamsStruct } from '../structs/commentsStruct.js';
-import { AuthenticatedRequest } from '../middlewares/authMiddleware.js';
+} from '../structs/articlesStructs';
+import { CreateCommentBodyStruct, GetCommentListParamsStruct } from '../structs/commentsStruct';
+import { AuthenticatedRequest } from '../middlewares/authMiddleware';
 
 export async function createArticle(req: AuthenticatedRequest, res: Response) {
   const data = create(req.body, CreateArticleBodyStruct);
+  const userId = req.user!.id;
 
-  const article = await prismaClient.article.create({
-    data: {
-      ...data,
-      userId: req.user!.id, // 로그인한 사용자 ID 추가
-    },
-    include: { user: { select: { id: true, nickname: true, image: true } } },
-  });
+  const article = await articleService.createArticle(userId, data);
 
-  return res.status(201).send(article);
+  return res.status(201).json(article);
 }
 
 export async function getArticle(req: AuthenticatedRequest, res: Response) {
   const { id } = create(req.params, IdParamsStruct);
-  const userId = req.user?.id; // 로그인하지 않은 경우도 고려
+  const userId = req.user?.id;
 
-  const article = await prismaClient.article.findUnique({
-    where: { id },
-    include: {
-      user: {
-        select: {
-          id: true,
-          nickname: true,
-          image: true,
-        },
-      },
-      _count: {
-        select: { likes: true },
-      },
-    },
-  });
+  const article = await articleService.getArticle(id, userId);
 
-  if (!article) {
-    throw new NotFoundError('article', id);
-  }
-
-  // isLiked 확인
-  let isLiked = false;
-  if (userId) {
-    const like = await prismaClient.articleLike.findUnique({
-      where: {
-        userId_articleId: {
-          userId,
-          articleId: id,
-        },
-      },
-    });
-    isLiked = !!like;
-  }
-
-  return res.send({
-    ...article,
-    likeCount: article._count.likes,
-    isLiked,
-  });
+  return res.json(article);
 }
 
 export async function updateArticle(req: AuthenticatedRequest, res: Response) {
   const { id } = create(req.params, IdParamsStruct);
   const data = create(req.body, UpdateArticleBodyStruct);
 
-  const article = await prismaClient.article.update({
-    where: { id },
-    data,
-    include: { user: { select: { id: true, nickname: true, image: true } } },
-  });
+  const article = await articleService.updateArticle(id, data);
 
-  return res.send(article);
+  return res.json(article);
 }
 
 export async function deleteArticle(req: AuthenticatedRequest, res: Response) {
   const { id } = create(req.params, IdParamsStruct);
 
-  await prismaClient.article.delete({ where: { id } });
+  await articleService.deleteArticle(id);
 
   return res.status(204).send();
 }
 
 export async function getArticleList(req: AuthenticatedRequest, res: Response) {
-  const { page, pageSize, orderBy, keyword } = create(req.query, GetArticleListParamsStruct);
+  const queryParams = create(req.query, GetArticleListParamsStruct);
 
-  const where = { title: keyword ? { contains: keyword } : undefined };
+  const result = await articleService.getArticleList(queryParams);
 
-  const totalCount = await prismaClient.article.count({ where });
-  const articles = await prismaClient.article.findMany({
-    skip: (page - 1) * pageSize,
-    take: pageSize,
-    orderBy: orderBy === 'recent' ? { createdAt: 'desc' } : { id: 'asc' },
-    where,
-    include: { user: { select: { id: true, nickname: true, image: true } } },
-  });
-
-  return res.send({ list: articles, totalCount });
+  return res.json(result);
 }
 
 export async function createComment(req: AuthenticatedRequest, res: Response) {
   const { id: articleId } = create(req.params, IdParamsStruct);
-  const { content } = create(req.body, CreateCommentBodyStruct);
+  const data = create(req.body, CreateCommentBodyStruct);
+  const userId = req.user!.id;
 
-  const existingArticle = await prismaClient.article.findUnique({ where: { id: articleId } });
-  if (!existingArticle) {
-    throw new NotFoundError('article', articleId);
-  }
+  const comment = await articleService.createComment(articleId, userId, data);
 
-  const comment = await prismaClient.comment.create({
-    data: {
-      articleId,
-      content,
-      userId: req.user!.id, // 추가
-    },
-    include: { user: { select: { id: true, nickname: true, image: true } } },
-  });
-
-  return res.status(201).send(comment);
+  return res.status(201).json(comment);
 }
 
 export async function getCommentList(req: AuthenticatedRequest, res: Response) {
   const { id: articleId } = create(req.params, IdParamsStruct);
-  const { cursor, limit } = create(req.query, GetCommentListParamsStruct);
+  const queryParams = create(req.query, GetCommentListParamsStruct);
 
-  const article = await prismaClient.article.findUnique({ where: { id: articleId } });
-  if (!article) {
-    throw new NotFoundError('article', articleId);
-  }
+  const result = await articleService.getCommentList(articleId, queryParams);
 
-  const commentsWithCursor = await prismaClient.comment.findMany({
-    cursor: cursor ? { id: cursor } : undefined,
-    take: limit + 1,
-    where: { articleId },
-    orderBy: { createdAt: 'desc' },
-    include: {
-      // 유저 정보 포함
-      user: {
-        select: {
-          id: true,
-          nickname: true,
-          image: true,
-        },
-      },
-    },
-  });
-  const comments = commentsWithCursor.slice(0, limit);
-  const cursorComment = commentsWithCursor[commentsWithCursor.length - 1];
-  const nextCursor = cursorComment ? cursorComment.id : null;
-
-  return res.send({ list: comments, nextCursor });
+  return res.json(result);
 }

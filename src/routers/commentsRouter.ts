@@ -1,8 +1,8 @@
 import express from 'express';
-import { withAsync } from '../lib/withAsync.js';
-import { authenticateToken } from '../middlewares/authMiddleware.js';
-import { checkCommentOwnership } from '../middlewares/commentAuthMiddleware.js';
-import { updateComment, deleteComment } from '../controllers/commentsController.js';
+import { withAsync } from '../lib/withAsync';
+import { authenticateToken } from '../middlewares/authMiddleware';
+import { checkCommentOwnership } from '../middlewares/commentAuthMiddleware';
+import { updateComment, deleteComment } from '../controllers/commentsController';
 
 const commentsRouter = express.Router();
 

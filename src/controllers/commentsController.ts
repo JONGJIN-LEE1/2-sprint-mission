@@ -1,27 +1,23 @@
 import { Response } from 'express';
 import { create } from 'superstruct';
-import { prismaClient } from '../lib/prismaClient.js';
-import { UpdateCommentBodyStruct } from '../structs/commentsStruct.js';
-import { IdParamsStruct } from '../structs/commonStructs.js';
-import { AuthenticatedRequest } from '../middlewares/authMiddleware.js';
+import { commentService } from '../services/comment.service';
+import { UpdateCommentBodyStruct } from '../structs/commentsStruct';
+import { IdParamsStruct } from '../structs/commonStructs';
+import { AuthenticatedRequest } from '../middlewares/authMiddleware';
 
 export async function updateComment(req: AuthenticatedRequest, res: Response) {
   const { id } = create(req.params, IdParamsStruct);
-  const { content } = create(req.body, UpdateCommentBodyStruct);
+  const data = create(req.body, UpdateCommentBodyStruct);
 
-  const updatedComment = await prismaClient.comment.update({
-    where: { id },
-    data: { content },
-    include: { user: { select: { id: true, nickname: true, image: true } } },
-  });
+  const updatedComment = await commentService.updateComment(id, data);
 
-  return res.send(updatedComment);
+  return res.json(updatedComment);
 }
 
 export async function deleteComment(req: AuthenticatedRequest, res: Response) {
   const { id } = create(req.params, IdParamsStruct);
 
-  await prismaClient.comment.delete({ where: { id } });
+  await commentService.deleteComment(id);
 
   return res.status(204).send();
 }
