@@ -1,3 +1,4 @@
+
 # Local files
 .vscode/
 node_modules/
@@ -9,3 +10,6 @@ public/*
 !public/.gitkeep
 
 dist/
+
+/generated/prisma
+
