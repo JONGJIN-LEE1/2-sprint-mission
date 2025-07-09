@@ -37,6 +37,6 @@ articlesRouter.delete(
 );
 
 // 댓글 작성
-articlesRouter.post('/:id/comments', withAsync(createComment));
+articlesRouter.post('/:id/comments', authenticateToken, withAsync(createComment));
 
 export default articlesRouter;
