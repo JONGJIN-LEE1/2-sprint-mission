@@ -3,6 +3,13 @@ export interface CreateCommentDto {
   content: string;
 }
 
+// 서비스 레이어에서 사용할 확장된 DTO
+export interface CreateCommentServiceDto extends CreateCommentDto {
+  userId: number;
+  articleId?: number;
+  productId?: number;
+}
+
 export interface UpdateCommentDto {
   content?: string;
 }
