@@ -1,58 +1,58 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { create } from 'superstruct';
-import { userService } from '../services/user.service.js';
 import {
-  UpdateUserBodyStruct,
-  ChangePasswordBodyStruct,
-  GetUserProductsParamsStruct,
-} from '../structs/usersStruct.js';
-import { AuthenticatedRequest } from '../middlewares/authMiddleware.js';
+  UpdateMeBodyStruct,
+  UpdatePasswordBodyStruct,
+  GetMyProductListParamsStruct,
+  GetMyFavoriteListParamsStruct,
+} from '../structs/usersStructs';
+import * as usersService from '../services/usersService';
+import * as authService from '../services/authService';
+import userResponseDTO from '../dto/userResponseDTO';
 
-// 자신의 정보 조회
-export async function getMyProfile(req: AuthenticatedRequest, res: Response) {
-  const userId = req.user!.id;
-
-  const profile = await userService.getMyProfile(userId);
-
-  return res.json(profile);
+export async function getMe(req: Request, res: Response) {
+  const user = await usersService.getUser(req.user.id);
+  res.send(userResponseDTO(user));
 }
 
-// 자신의 정보 수정
-export async function updateMyProfile(req: AuthenticatedRequest, res: Response) {
-  const userId = req.user!.id;
-  const data = create(req.body, UpdateUserBodyStruct);
-
-  const updatedProfile = await userService.updateMyProfile(userId, data);
-
-  return res.json(updatedProfile);
+export async function updateMe(req: Request, res: Response) {
+  const data = create(req.body, UpdateMeBodyStruct);
+  const updatedUser = await usersService.updateUser(req.user.id, data);
+  res.status(200).send(userResponseDTO(updatedUser));
 }
 
-// 비밀번호 변경
-export async function changePassword(req: AuthenticatedRequest, res: Response) {
-  const userId = req.user!.id;
-  const data = create(req.body, ChangePasswordBodyStruct);
-
-  const result = await userService.changePassword(userId, data);
-
-  return res.json(result);
+export async function updateMyPassword(req: Request, res: Response) {
+  const { password, newPassword } = create(req.body, UpdatePasswordBodyStruct);
+  await authService.updateMyPassword(req.user.id, password, newPassword);
+  res.status(200).send();
 }
 
-// 자신이 등록한 상품 목록 조회
-export async function getMyProducts(req: AuthenticatedRequest, res: Response) {
-  const userId = req.user!.id;
-  const queryParams = create(req.query, GetUserProductsParamsStruct);
+export async function getMyProductList(req: Request, res: Response) {
+  const { page, pageSize, orderBy, keyword } = create(req.query, GetMyProductListParamsStruct);
+  const { list, totalCount } = await usersService.getMyProductList(req.user.id, {
+    page,
+    pageSize,
+    orderBy,
+    keyword,
+  });
 
-  const result = await userService.getMyProducts(userId, queryParams);
-
-  return res.json(result);
+  res.send({
+    list,
+    totalCount,
+  });
 }
 
-// 좋아요한 상품 목록 조회
-export async function getMyLikedProducts(req: AuthenticatedRequest, res: Response) {
-  const userId = req.user!.id;
-  const queryParams = create(req.query, GetUserProductsParamsStruct);
+export async function getMyFavoriteList(req: Request, res: Response) {
+  const { page, pageSize, orderBy, keyword } = create(req.query, GetMyFavoriteListParamsStruct);
+  const { list, totalCount } = await usersService.getMyFavoriteList(req.user.id, {
+    page,
+    pageSize,
+    orderBy,
+    keyword,
+  });
 
-  const result = await userService.getMyLikedProducts(userId, queryParams);
-
-  return res.json(result);
+  res.send({
+    list,
+    totalCount,
+  });
 }
