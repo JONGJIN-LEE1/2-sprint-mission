@@ -1,6 +1,8 @@
 import ForbiddenError from '../lib/errors/ForbiddenError';
 import NotFoundError from '../lib/errors/NotFoundError';
 import * as productsRepository from '../repositories/productsRepository';
+import * as favoritesRepository from '../repositories/favoritesRepository';
+import * as notificationsService from '../services/notificationsService';
 import { PagePaginationParams, PagePaginationResult } from '../types/pagination';
 import Product from '../types/Product';
 
@@ -43,7 +45,25 @@ export async function updateProduct(id: number, data: UpdateProductData): Promis
   if (existingProduct.userId !== data.userId) {
     throw new ForbiddenError('Should be the owner of the product');
   }
+
+  // 가격 변경 감지
+  const priceChanged = data.price && data.price !== existingProduct.price;
+
   const updatedProduct = await productsRepository.updateProductWithFavorites(id, data);
+
+  // 가격이 변경되었으면 좋아요한 사용자들에게 알림 발송
+  if (priceChanged) {
+    const favorites = await favoritesRepository.getFavoritesByProductId(id);
+    for (const favorite of favorites) {
+      await notificationsService.createAndSendNotification({
+        type: 'PRICE_CHANGE',
+        message: `"${existingProduct.name}" 상품 가격이 ${existingProduct.price}원에서 ${data.price}원으로 변경되었습니다.`,
+        userId: favorite.userId,
+        relatedId: id,
+      });
+    }
+  }
+
   return updatedProduct;
 }
 
