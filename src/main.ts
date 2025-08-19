@@ -10,8 +10,21 @@ import imagesRouter from './routers/imagesRouter';
 import authRouter from './routers/authRouter';
 import usersRouter from './routers/usersRouter';
 import { defaultNotFoundHandler, globalErrorHandler } from './controllers/errorController';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+import notificationsRouter from './routers/notificationsRouter';
+import { socketManager } from './lib/socketManager';
 
 const app = express();
+const server = createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST'],
+  },
+});
+
+socketManager.initialize(io);
 
 app.use(cors());
 app.use(express.json());
@@ -24,6 +37,7 @@ app.use('/comments', commentsRouter);
 app.use('/images', imagesRouter);
 app.use('/auth', authRouter);
 app.use('/users', usersRouter);
+app.use('/notifications', notificationsRouter);
 
 app.use(defaultNotFoundHandler);
 app.use(globalErrorHandler);
