@@ -14,31 +14,31 @@ datasource db {
 }
 
 model Article {
-  id             Int       @id @default(autoincrement())
-  title          String
-  content        String
-  image          String?
-  comments Comment[]
-  user           User      @relation(fields: [userId], references: [id])
-  userId         Int
-  likes           Like[]
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id        Int       @id @default(autoincrement())
+  title     String
+  content   String
+  image     String?
+  comments  Comment[]
+  user      User      @relation(fields: [userId], references: [id])
+  userId    Int
+  likes     Like[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model Product {
-  id             Int       @id @default(autoincrement())
-  name           String
-  description    String
-  price          Int
-  tags           String[]
-  images         String[]
-  comments       Comment[]
-  user           User      @relation(fields: [userId], references: [id])
-  userId         Int
-  favorites      Favorite[]
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id          Int        @id @default(autoincrement())
+  name        String
+  description String
+  price       Int
+  tags        String[]
+  images      String[]
+  comments    Comment[]
+  user        User       @relation(fields: [userId], references: [id])
+  userId      Int
+  favorites   Favorite[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 }
 
 model Comment {
@@ -55,18 +55,19 @@ model Comment {
 }
 
 model User {
-  id       Int       @id @default(autoincrement())
-  email    String    @unique
-  nickname String
-  image    String?
-  password String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  articles   Article[]
-  products   Product[]
-  comments   Comment[]
-  favorites  Favorite[]
-  likes      Like[]
+  id            Int            @id @default(autoincrement())
+  email         String         @unique
+  nickname      String
+  image         String?
+  password      String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  articles      Article[]
+  products      Product[]
+  comments      Comment[]
+  favorites     Favorite[]
+  likes         Like[]
+  notifications Notification[]
 }
 
 model Favorite {
@@ -85,6 +86,18 @@ model Like {
   articleId Int
   user      User     @relation(fields: [userId], references: [id])
   userId    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  type      String // "PRICE_CHANGE" | "NEW_COMMENT"
+  message   String
+  isRead    Boolean  @default(false)
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  relatedId Int? // productId or articleId
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
