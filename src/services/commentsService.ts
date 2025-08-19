@@ -1,6 +1,7 @@
 import * as articlesRepository from '../repositories/articlesRepository';
 import * as commentsRepository from '../repositories/commentsRepository';
 import * as productsRepository from '../repositories/productsRepository';
+import * as notificationsService from '../services/notificationsService';
 import { CursorPaginationParams, CursorPaginationResult } from '../types/pagination';
 import BadRequestError from '../lib/errors/BadRequestError';
 import ForbiddenError from '../lib/errors/ForbiddenError';
@@ -20,11 +21,16 @@ export async function createComment(data: CreateCommentData): Promise<Comment> {
     throw new BadRequestError('Either articleId or productId must be provided');
   }
 
+  let targetUserId: number | null = null;
+  let targetName: string = '';
+
   if (data.articleId) {
     const article = await articlesRepository.getArticle(data.articleId);
     if (!article) {
       throw new NotFoundError('article', data.articleId);
     }
+    targetUserId = article.userId;
+    targetName = article.title;
   }
 
   if (data.productId) {
@@ -32,6 +38,8 @@ export async function createComment(data: CreateCommentData): Promise<Comment> {
     if (!product) {
       throw new NotFoundError('product', data.productId);
     }
+    targetUserId = product.userId;
+    targetName = product.name;
   }
 
   const comment = await commentsRepository.createComment({
@@ -39,6 +47,17 @@ export async function createComment(data: CreateCommentData): Promise<Comment> {
     articleId: data.articleId ?? null,
     productId: data.productId ?? null,
   });
+
+  // 게시글/상품 작성자에게 알림 발송 (본인 댓글 제외)
+  if (targetUserId && targetUserId !== data.userId) {
+    await notificationsService.createAndSendNotification({
+      type: 'NEW_COMMENT',
+      message: `"${targetName}"에 새 댓글이 달렸습니다: ${data.content.substring(0, 50)}${data.content.length > 50 ? '...' : ''}`,
+      userId: targetUserId,
+      relatedId: data.articleId || data.productId,
+    });
+  }
+
   return comment;
 }
 
