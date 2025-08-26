@@ -28,9 +28,7 @@ export async function getProductWithFavorites(id: number, userId?: number) {
     ...product,
     favorites: undefined,
     favoriteCount: product.favorites.length,
-    isFavorited: userId
-      ? product.favorites.some((favorite) => favorite.userId === userId)
-      : undefined,
+    isFavorited: userId ? product.favorites.some((favorite) => favorite.userId === userId) : false,
   };
   return mappedProduct;
 }
