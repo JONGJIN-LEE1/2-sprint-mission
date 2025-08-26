@@ -76,8 +76,8 @@ describe('Auth API', () => {
       expect(response.headers['set-cookie']).toBeDefined();
 
       const cookies = response.headers['set-cookie'];
-      expect(cookies[0]).toContain('accessToken');
-      expect(cookies[1]).toContain('refreshToken');
+      expect(cookies[0]).toContain('access-token');
+      expect(cookies[1]).toContain('refresh-token');
     });
 
     it('should return 400 for invalid email', async () => {
@@ -111,8 +111,8 @@ describe('Auth API', () => {
 
       const cookies = response.headers['set-cookie'];
       expect(cookies).toBeDefined();
-      expect(cookies[0]).toContain('accessToken=;');
-      expect(cookies[1]).toContain('refreshToken=;');
+      expect(cookies[0]).toContain('access-token=;');
+      expect(cookies[1]).toContain('refresh-token=;');
     });
   });
 
@@ -125,26 +125,32 @@ describe('Auth API', () => {
         .post('/auth/login')
         .send({ email: user.email, password });
 
-      const cookies = loginResponse.headers['set-cookie'];
-      const refreshToken = cookies[1].split('=')[1].split(';')[0];
+      const cookies = loginResponse.headers['set-cookie'] as unknown as string[];
+      // refresh-token이 두 번째 쿠키라고 가정
+      let refreshToken = '';
+      cookies.forEach((cookie) => {
+        if (cookie.includes('refresh-token=')) {
+          refreshToken = cookie.split('refresh-token=')[1].split(';')[0];
+        }
+      });
 
       // 토큰 갱신
       const response = await request(app)
         .post('/auth/refresh')
-        .set('Cookie', `refreshToken=${refreshToken}`);
+        .set('Cookie', `refresh-token=${refreshToken}`);
 
       expect(response.status).toBe(200);
       expect(response.headers['set-cookie']).toBeDefined();
 
       const newCookies = response.headers['set-cookie'];
-      expect(newCookies[0]).toContain('accessToken');
-      expect(newCookies[1]).toContain('refreshToken');
+      expect(newCookies[0]).toContain('access-token');
+      expect(newCookies[1]).toContain('refresh-token');
     });
 
     it('should return 400 for invalid refresh token', async () => {
       const response = await request(app)
         .post('/auth/refresh')
-        .set('Cookie', 'refreshToken=invalid_token');
+        .set('Cookie', 'refresh-token=invalid_token');
 
       expect(response.status).toBe(400);
     });
