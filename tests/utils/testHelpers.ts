@@ -4,12 +4,14 @@ import cookieParser from 'cookie-parser';
 import { faker } from '@faker-js/faker';
 import bcrypt from 'bcrypt';
 import { PrismaClient } from '@prisma/client';
-import articlesRouter from '../../src/routers/articlesRouter';
-import productsRouter from '../../src/routers/productsRouter';
-import authRouter from '../../src/routers/authRouter';
-import commentsRouter from '../../src/routers/commentsRouter';
-import { globalErrorHandler } from '../../src/controllers/errorController';
-import { generateTokens } from '../../src/lib/token';
+import jwt from 'jsonwebtoken';
+
+// Import routers with proper paths
+const articlesRouter = require('../../src/routers/articlesRouter').default;
+const productsRouter = require('../../src/routers/productsRouter').default;
+const authRouter = require('../../src/routers/authRouter').default;
+const commentsRouter = require('../../src/routers/commentsRouter').default;
+const { globalErrorHandler } = require('../../src/controllers/errorController');
 
 const prisma = new PrismaClient();
 
@@ -51,7 +53,13 @@ export async function createTestUser(overrides = {}) {
 
 // 인증된 사용자 토큰 생성
 export function getAuthTokens(userId: number) {
-  const { accessToken, refreshToken } = generateTokens(userId);
+  const JWT_ACCESS_TOKEN_SECRET = process.env.JWT_ACCESS_TOKEN_SECRET || 'test-access-secret-key';
+  const JWT_REFRESH_TOKEN_SECRET =
+    process.env.JWT_REFRESH_TOKEN_SECRET || 'test-refresh-secret-key';
+
+  const accessToken = jwt.sign({ id: userId }, JWT_ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+  const refreshToken = jwt.sign({ id: userId }, JWT_REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
+
   return { accessToken, refreshToken };
 }
 
@@ -103,11 +111,11 @@ export async function createTestComment(
   return await prisma.comment.create({ data });
 }
 
-// 쿠키 문자열 생성
+// 쿠키 문자열 생성 (constants.ts의 쿠키 이름과 일치)
 export function createCookieString(accessToken: string, refreshToken?: string): string {
-  let cookie = `accessToken=${accessToken}`;
+  let cookie = `access-token=${accessToken}`;
   if (refreshToken) {
-    cookie += `; refreshToken=${refreshToken}`;
+    cookie += `; refresh-token=${refreshToken}`;
   }
   return cookie;
 }
