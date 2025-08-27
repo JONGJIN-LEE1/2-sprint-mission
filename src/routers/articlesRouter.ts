@@ -1,42 +1,28 @@
 import express from 'express';
 import { withAsync } from '../lib/withAsync';
-import { authenticateToken } from '../middlewares/authMiddleware';
-import { checkArticleOwnership } from '../middlewares/articleAuthMiddleware';
 import {
   createArticle,
+  getArticleList,
   getArticle,
   updateArticle,
   deleteArticle,
-  getArticleList,
   createComment,
   getCommentList,
+  createLike,
+  deleteLike,
 } from '../controllers/articlesController';
+import authenticate from '../middlewares/authenticate';
 
 const articlesRouter = express.Router();
 
-// 공개 라우트
-articlesRouter.get('/', withAsync(getArticleList));
-articlesRouter.get('/:id', withAsync(getArticle));
+articlesRouter.post('/', authenticate(), withAsync(createArticle));
+articlesRouter.get('/', authenticate({ optional: true }), withAsync(getArticleList));
+articlesRouter.get('/:id', authenticate({ optional: true }), withAsync(getArticle));
+articlesRouter.patch('/:id', authenticate(), withAsync(updateArticle));
+articlesRouter.delete('/:id', authenticate(), withAsync(deleteArticle));
+articlesRouter.post('/:id/comments', authenticate(), withAsync(createComment));
 articlesRouter.get('/:id/comments', withAsync(getCommentList));
-
-// 인증 필요한 라우트
-articlesRouter.post('/', authenticateToken, withAsync(createArticle));
-
-// 소유자 확인 필요한 라우트
-articlesRouter.patch(
-  '/:id',
-  authenticateToken,
-  withAsync(checkArticleOwnership),
-  withAsync(updateArticle),
-);
-articlesRouter.delete(
-  '/:id',
-  authenticateToken,
-  withAsync(checkArticleOwnership),
-  withAsync(deleteArticle),
-);
-
-// 댓글 작성
-articlesRouter.post('/:id/comments', authenticateToken, withAsync(createComment));
+articlesRouter.post('/:id/likes', authenticate(), withAsync(createLike));
+articlesRouter.delete('/:id/likes', authenticate(), withAsync(deleteLike));
 
 export default articlesRouter;

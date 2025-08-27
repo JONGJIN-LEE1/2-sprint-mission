@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import cookieParser from 'cookie-parser';
 import { PORT, PUBLIC_PATH, STATIC_PATH } from './lib/constants';
 import articlesRouter from './routers/articlesRouter';
 import productsRouter from './routers/productsRouter';
@@ -8,38 +9,39 @@ import commentsRouter from './routers/commentsRouter';
 import imagesRouter from './routers/imagesRouter';
 import authRouter from './routers/authRouter';
 import usersRouter from './routers/usersRouter';
-import likesRouter from './routers/likesRouter';
 import { defaultNotFoundHandler, globalErrorHandler } from './controllers/errorController';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+import notificationsRouter from './routers/notificationsRouter';
+import { socketManager } from './lib/socketManager';
 
 const app = express();
+const server = createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST'],
+  },
+});
 
-// CORS 설정
+socketManager.initialize(io);
+
 app.use(cors());
-
-// JSON 파싱 미들웨어
 app.use(express.json());
-
-// 정적 파일 서빙
+app.use(cookieParser());
 app.use(STATIC_PATH, express.static(path.resolve(process.cwd(), PUBLIC_PATH)));
 
-// 라우터 등록
 app.use('/articles', articlesRouter);
 app.use('/products', productsRouter);
 app.use('/comments', commentsRouter);
 app.use('/images', imagesRouter);
 app.use('/auth', authRouter);
 app.use('/users', usersRouter);
-app.use('/likes', likesRouter);
+app.use('/notifications', notificationsRouter);
 
-// 404 핸들러
 app.use(defaultNotFoundHandler);
-
-// 글로벌 에러 핸들러
 app.use(globalErrorHandler);
 
-// 서버 시작
-const server = app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+app.listen(PORT, () => {
+  console.log(`Server started on port ${PORT}`);
 });
-
-export default app;

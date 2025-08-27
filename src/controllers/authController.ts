@@ -1,55 +1,50 @@
-import { Request, Response, NextFunction } from 'express';
-import { assert } from 'superstruct';
-import { authService } from '../services/auth.service';
-import { SignupStruct, LoginStruct, RefreshTokenStruct } from '../structs/authStructs';
+import { Request, Response } from 'express';
+import { create } from 'superstruct';
+import { ACCESS_TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_NAME, NODE_ENV } from '../lib/constants';
+import { LoginBodyStruct, RegisterBodyStruct } from '../structs/authStructs';
+import * as authService from '../services/authService';
+import userResponseDTO from '../dto/userResponseDTO';
 
-export const signup = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    // Validate request data
-    assert(req.body, SignupStruct);
+export async function register(req: Request, res: Response) {
+  const data = create(req.body, RegisterBodyStruct);
+  const user = await authService.register(data);
+  res.status(201).json(userResponseDTO(user));
+}
 
-    const user = await authService.signup(req.body);
+export async function login(req: Request, res: Response) {
+  const data = create(req.body, LoginBodyStruct);
+  const { accessToken, refreshToken } = await authService.login(data);
+  setTokenCookies(res, accessToken, refreshToken);
+  res.status(200).send();
+}
 
-    res.status(201).json(user);
-  } catch (error) {
-    next(error);
-  }
-};
+export async function logout(req: Request, res: Response) {
+  clearTokenCookies(res);
+  res.status(200).send();
+}
 
-export const login = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    // Validate request data
-    assert(req.body, LoginStruct);
+export async function refreshToken(req: Request, res: Response) {
+  const refreshToken = req.cookies[REFRESH_TOKEN_COOKIE_NAME];
+  const { accessToken, refreshToken: newRefreshToken } = await authService.refreshToken(refreshToken);
+  setTokenCookies(res, accessToken, newRefreshToken);
+  res.status(200).send();
+}
 
-    const authResponse = await authService.login(req.body);
+function setTokenCookies(res: Response, accessToken: string, refreshToken: string) {
+  res.cookie(ACCESS_TOKEN_COOKIE_NAME, accessToken, {
+    httpOnly: true,
+    secure: NODE_ENV === 'production',
+    maxAge: 1 * 60 * 60 * 1000, // 1 hour
+  });
+  res.cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {
+    httpOnly: true,
+    secure: NODE_ENV === 'production',
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    path: '/auth/refresh',
+  });
+}
 
-    res.json(authResponse);
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const refreshToken = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    // Validate request data
-    assert(req.body, RefreshTokenStruct);
-
-    const authResponse = await authService.refreshAccessToken(req.body);
-
-    res.json(authResponse);
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const logout = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { refreshToken } = req.body;
-
-    await authService.logout(refreshToken);
-
-    res.json({ message: '로그아웃되었습니다.' });
-  } catch (error) {
-    next(error);
-  }
-};
+function clearTokenCookies(res: Response) {
+  res.clearCookie(ACCESS_TOKEN_COOKIE_NAME);
+  res.clearCookie(REFRESH_TOKEN_COOKIE_NAME);
+}

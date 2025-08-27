@@ -1,32 +1,20 @@
 import express from 'express';
 import { withAsync } from '../lib/withAsync';
-import { authenticateToken } from '../middlewares/authMiddleware';
 import {
-  getMyProfile,
-  updateMyProfile,
-  changePassword,
-  getMyProducts,
-  getMyLikedProducts, // 추가
+  getMe,
+  updateMe,
+  updateMyPassword,
+  getMyProductList,
+  getMyFavoriteList,
 } from '../controllers/usersController';
+import authenticate from '../middlewares/authenticate';
 
 const usersRouter = express.Router();
 
-// 모든 라우트는 인증이 필요함
-usersRouter.use(authenticateToken);
-
-// 자신의 정보 조회
-usersRouter.get('/me', withAsync(getMyProfile));
-
-// 자신의 정보 수정
-usersRouter.patch('/me', withAsync(updateMyProfile));
-
-// 비밀번호 변경
-usersRouter.patch('/me/password', withAsync(changePassword));
-
-// 자신이 등록한 상품 목록 조회
-usersRouter.get('/me/products', withAsync(getMyProducts));
-
-// 좋아요한 상품 목록 조회
-usersRouter.get('/me/liked-products', withAsync(getMyLikedProducts));
+usersRouter.get('/me', authenticate(), withAsync(getMe));
+usersRouter.patch('/me', authenticate(), withAsync(updateMe));
+usersRouter.patch('/me/password', authenticate(), withAsync(updateMyPassword));
+usersRouter.get('/me/products', authenticate(), withAsync(getMyProductList));
+usersRouter.get('/me/favorites', authenticate(), withAsync(getMyFavoriteList));
 
 export default usersRouter;

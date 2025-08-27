@@ -14,31 +14,31 @@ datasource db {
 }
 
 model Article {
-  id             Int           @id @default(autoincrement())
-  title          String
-  content        String
-  image          String?
-  user           User          @relation(fields: [userId], references: [id]) // 게시글 기능 인가 추가
-  userId         Int // 게시글 기능 인가 추가
-  ArticleComment Comment[]
-  likes          ArticleLike[] // 좋아요 기능 추가
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  id        Int       @id @default(autoincrement())
+  title     String
+  content   String
+  image     String?
+  comments  Comment[]
+  user      User      @relation(fields: [userId], references: [id])
+  userId    Int
+  likes     Like[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model Product {
-  id             Int           @id @default(autoincrement())
-  name           String
-  description    String
-  price          Int
-  tags           String[]
-  images         String[]
-  user           User          @relation(fields: [userId], references: [id]) // 상품 기능 인가 추가
-  userId         Int // 상품 기능 인가 추가
-  ProductComment Comment[]
-  likes          ProductLike[] // 좋아요 기능 추가
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  id          Int        @id @default(autoincrement())
+  name        String
+  description String
+  price       Int
+  tags        String[]
+  images      String[]
+  comments    Comment[]
+  user        User       @relation(fields: [userId], references: [id])
+  userId      Int
+  favorites   Favorite[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 }
 
 model Comment {
@@ -48,8 +48,8 @@ model Comment {
   productId Int?
   article   Article? @relation(fields: [articleId], references: [id], onDelete: Cascade)
   articleId Int?
-  user      User?    @relation(fields: [userId], references: [id]) // 댓글 기능 인가 추가
-  userId    Int? // 댓글 기능 인가 추가
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -60,46 +60,44 @@ model User {
   nickname      String
   image         String?
   password      String
-  products      Product[] // 상품 기능 인가 추가
-  articles      Article[] // 게시글 기능 인가 추가
-  comments      Comment[] // 댓글 기능 인가 추가
-  productLikes  ProductLike[] // 좋아요한 상품
-  articleLikes  ArticleLike[] // 좋아요한 게시글
-  refreshTokens RefreshToken[] // Refresh Token
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+  articles      Article[]
+  products      Product[]
+  comments      Comment[]
+  favorites     Favorite[]
+  likes         Like[]
+  notifications Notification[]
 }
 
-// Refresh Token 모델 추가
-model RefreshToken {
+model Favorite {
   id        Int      @id @default(autoincrement())
-  token     String   @unique
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    Int
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-}
-
-// 상품 좋아요 모델 추가
-model ProductLike {
-  id        Int      @id @default(autoincrement())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    Int
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id])
   productId Int
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
   createdAt DateTime @default(now())
-
-  @@unique([userId, productId]) // 중복 좋아요 방지
+  updatedAt DateTime @updatedAt
 }
 
-// 게시글 좋아요 모델 추가
-model ArticleLike {
+model Like {
   id        Int      @id @default(autoincrement())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    Int
-  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  article   Article  @relation(fields: [articleId], references: [id])
   articleId Int
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
 
-  @@unique([userId, articleId]) // 중복 좋아요 방지
+model Notification {
+  id        Int      @id @default(autoincrement())
+  type      String // "PRICE_CHANGE" | "NEW_COMMENT"
+  message   String
+  isRead    Boolean  @default(false)
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  relatedId Int? // productId or articleId
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

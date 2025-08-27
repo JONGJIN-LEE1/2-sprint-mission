@@ -1,7 +1,5 @@
 import express from 'express';
 import { withAsync } from '../lib/withAsync';
-import { authenticateToken } from '../middlewares/authMiddleware';
-import { checkProductOwnership } from '../middlewares/productAuthMiddleware';
 import {
   createProduct,
   getProduct,
@@ -10,33 +8,21 @@ import {
   getProductList,
   createComment,
   getCommentList,
+  createFavorite,
+  deleteFavorite,
 } from '../controllers/productsController';
+import authenticate from '../middlewares/authenticate';
 
 const productsRouter = express.Router();
 
-// 공개 라우트 (인증 불필요)
-productsRouter.get('/', withAsync(getProductList));
-productsRouter.get('/:id', withAsync(getProduct));
+productsRouter.post('/', authenticate(), withAsync(createProduct));
+productsRouter.get('/:id', authenticate({ optional: true }), withAsync(getProduct));
+productsRouter.patch('/:id', authenticate(), withAsync(updateProduct));
+productsRouter.delete('/:id', authenticate(), withAsync(deleteProduct));
+productsRouter.get('/', authenticate({ optional: true }), withAsync(getProductList));
+productsRouter.post('/:id/comments', authenticate(), withAsync(createComment));
 productsRouter.get('/:id/comments', withAsync(getCommentList));
-
-// 보호된 라우트 (인증 필요)
-productsRouter.post('/', authenticateToken, withAsync(createProduct));
-
-// 소유자 확인이 필요한 라우트
-productsRouter.patch(
-  '/:id',
-  authenticateToken,
-  withAsync(checkProductOwnership),
-  withAsync(updateProduct),
-);
-productsRouter.delete(
-  '/:id',
-  authenticateToken,
-  withAsync(checkProductOwnership),
-  withAsync(deleteProduct),
-);
-
-// 댓글 작성도 인증이 필요
-productsRouter.post('/:id/comments', authenticateToken, withAsync(createComment));
+productsRouter.post('/:id/favorites', authenticate(), withAsync(createFavorite));
+productsRouter.delete('/:id/favorites', authenticate(), withAsync(deleteFavorite));
 
 export default productsRouter;

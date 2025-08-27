@@ -1,6 +1,5 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { create } from 'superstruct';
-import { productService } from '../services/product.service';
 import { IdParamsStruct } from '../structs/commonStructs';
 import {
   CreateProductBodyStruct,
@@ -8,66 +7,73 @@ import {
   UpdateProductBodyStruct,
 } from '../structs/productsStruct';
 import { CreateCommentBodyStruct, GetCommentListParamsStruct } from '../structs/commentsStruct';
-import { AuthenticatedRequest } from '../middlewares/authMiddleware';
+import * as productsService from '../services/productsService';
+import * as commentsService from '../services/commentsService';
+import * as favoritesService from '../services/favoritesService';
 
-export async function createProduct(req: AuthenticatedRequest, res: Response) {
+export async function createProduct(req: Request, res: Response) {
   const data = create(req.body, CreateProductBodyStruct);
-  const userId = req.user!.id;
-
-  const product = await productService.createProduct(userId, data);
-
-  res.status(201).json(product);
+  const createdProduct = await productsService.createProduct({
+    ...data,
+    userId: req.user.id,
+  });
+  res.status(201).send(createdProduct);
 }
 
-export async function getProduct(req: AuthenticatedRequest, res: Response) {
+export async function getProduct(req: Request, res: Response) {
   const { id } = create(req.params, IdParamsStruct);
-  const userId = req.user?.id;
-
-  const product = await productService.getProduct(id, userId);
-
-  return res.json(product);
+  const product = await productsService.getProduct(id);
+  res.send(product);
 }
 
-export async function updateProduct(req: AuthenticatedRequest, res: Response) {
+export async function updateProduct(req: Request, res: Response) {
   const { id } = create(req.params, IdParamsStruct);
   const data = create(req.body, UpdateProductBodyStruct);
-
-  const product = await productService.updateProduct(id, data);
-
-  return res.json(product);
+  const updatedProduct = await productsService.updateProduct(id, {
+    ...data,
+    userId: req.user.id,
+  });
+  res.send(updatedProduct);
 }
 
-export async function deleteProduct(req: AuthenticatedRequest, res: Response) {
+export async function deleteProduct(req: Request, res: Response) {
   const { id } = create(req.params, IdParamsStruct);
-
-  await productService.deleteProduct(id);
-
-  return res.status(204).send();
+  await productsService.deleteProduct(id, req.user.id);
+  res.status(204).send();
 }
 
-export async function getProductList(req: AuthenticatedRequest, res: Response) {
-  const queryParams = create(req.query, GetProductListParamsStruct);
-
-  const result = await productService.getProductList(queryParams);
-
-  return res.json(result);
+export async function getProductList(req: Request, res: Response) {
+  const params = create(req.query, GetProductListParamsStruct);
+  const result = await productsService.getProductList(params, {
+    userId: req.user?.id,
+  });
+  res.send(result);
 }
 
-export async function createComment(req: AuthenticatedRequest, res: Response) {
-  const { id: productId } = create(req.params, IdParamsStruct);
+export async function createComment(req: Request, res: Response) {
   const data = create(req.body, CreateCommentBodyStruct);
-  const userId = req.user!.id;
-
-  const comment = await productService.createComment(productId, userId, data);
-
-  return res.status(201).json(comment);
+  const createdComment = await commentsService.createComment({
+    ...data,
+    userId: req.user.id,
+  });
+  res.status(201).send(createdComment);
 }
 
-export async function getCommentList(req: AuthenticatedRequest, res: Response) {
+export async function getCommentList(req: Request, res: Response) {
   const { id: productId } = create(req.params, IdParamsStruct);
-  const queryParams = create(req.query, GetCommentListParamsStruct);
+  const params = create(req.query, GetCommentListParamsStruct);
+  const result = await commentsService.getCommentListByProductId(productId, params);
+  res.send(result);
+}
 
-  const result = await productService.getCommentList(productId, queryParams);
+export async function createFavorite(req: Request, res: Response) {
+  const { id: productId } = create(req.params, IdParamsStruct);
+  await favoritesService.createFavorite(productId, req.user.id);
+  res.status(201).send();
+}
 
-  return res.json(result);
+export async function deleteFavorite(req: Request, res: Response) {
+  const { id: productId } = create(req.params, IdParamsStruct);
+  await favoritesService.deleteFavorite(productId, req.user.id);
+  res.status(204).send();
 }
