@@ -1,48 +1,75 @@
 import { Request, Response } from 'express';
 import multer from 'multer';
+import multerS3 from 'multer-s3';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
-import { PUBLIC_PATH, STATIC_PATH } from '../lib/constants';
+import { PUBLIC_PATH, STATIC_PATH, IS_PRODUCTION } from '../lib/constants';
 import BadRequestError from '../lib/errors/BadRequestError';
+import { s3Client } from '../config/s3.config';
 
 const ALLOWED_MIME_TYPES = ['image/png', 'image/jpeg', 'image/jpg'];
 const FILE_SIZE_LIMIT = 5 * 1024 * 1024;
 
-export const upload = multer({
-  storage: multer.diskStorage({
-    destination(req, file, cb) {
-      cb(null, PUBLIC_PATH);
-    },
-    filename(req, file, cb) {
-      const ext = path.extname(file.originalname);
-      const filename = `${uuidv4()}${ext}`;
-      cb(null, filename);
-    },
-  }),
+// 로컬 스토리지 설정 (개발 환경)
+const localStorage = multer.diskStorage({
+  destination(req, file, cb) {
+    cb(null, PUBLIC_PATH);
+  },
+  filename(req, file, cb) {
+    const ext = path.extname(file.originalname);
+    const filename = `${uuidv4()}${ext}`;
+    cb(null, filename);
+  },
+});
 
+// S3 스토리지 설정 (프로덕션 환경)
+const s3Storage = multerS3({
+  s3: s3Client,
+  bucket: process.env.AWS_S3_BUCKET_NAME!,
+  contentType: multerS3.AUTO_CONTENT_TYPE,
+  key: function (req, file, cb) {
+    const ext = path.extname(file.originalname);
+    const filename = `${STATIC_PATH}/${uuidv4()}${ext}`;
+    cb(null, filename);
+  },
+});
+
+export const upload = multer({
+  storage: IS_PRODUCTION ? s3Storage : localStorage,
   limits: {
     fileSize: FILE_SIZE_LIMIT,
   },
-
   fileFilter: function (req, file, cb) {
     if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
       const err = new BadRequestError('Only png, jpeg, and jpg are allowed');
       return cb(err);
     }
-
     cb(null, true);
   },
 });
 
 export async function uploadImage(req: Request, res: Response) {
-  const host = req.get('host');
-  if (!host) {
-    throw new BadRequestError('Host is required');
-  }
   if (!req.file) {
     throw new BadRequestError('File is required');
   }
-  const filePath = path.join(host, STATIC_PATH, req.file.filename);
-  const url = `http://${filePath}`;
+
+  let url: string;
+
+  if (IS_PRODUCTION) {
+    // S3 URL 생성
+    const location = (req.file as any).location;
+    url =
+      location ||
+      `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${(req.file as any).key}`;
+  } else {
+    // 로컬 URL 생성
+    const host = req.get('host');
+    if (!host) {
+      throw new BadRequestError('Host is required');
+    }
+    const filePath = path.join(STATIC_PATH, req.file.filename);
+    url = `http://${host}/${filePath}`;
+  }
+
   res.send({ url });
 }
