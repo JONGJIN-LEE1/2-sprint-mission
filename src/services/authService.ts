@@ -59,18 +59,35 @@ export async function refreshToken(refreshToken?: string) {
     throw new BadRequestError('Invalid refresh token');
   }
 
-  const { userId } = verifyRefreshToken(refreshToken);
+  try {
+    const { userId } = verifyRefreshToken(refreshToken);
 
-  const user = await usersRepository.getUser(userId);
-  if (!user) {
-    throw new BadRequestError('Invalid refresh token');
+    const user = await usersRepository.getUser(userId);
+    if (!user) {
+      throw new BadRequestError('Invalid refresh token');
+    }
+
+    const { accessToken, refreshToken: newRefreshToken } = generateTokens(userId);
+    return {
+      accessToken,
+      refreshToken: newRefreshToken,
+    };
+  } catch (error) {
+    // JWT 검증 오류를 BadRequestError로 변환
+    if (
+      error instanceof Error &&
+      (error.name === 'JsonWebTokenError' ||
+        error.name === 'TokenExpiredError' ||
+        error.name === 'NotBeforeError')
+    ) {
+      throw new BadRequestError('Invalid refresh token');
+    }
+    // BadRequestError가 이미 throw된 경우 그대로 전달
+    if (error instanceof BadRequestError) {
+      throw error;
+    }
+    throw error;
   }
-
-  const { accessToken, refreshToken: newRefreshToken } = generateTokens(userId);
-  return {
-    accessToken,
-    refreshToken: newRefreshToken,
-  };
 }
 
 export async function updateMyPassword(userId: User['id'], password: string, newPassword: string) {
@@ -93,10 +110,27 @@ export async function authenticate(accessToken?: string) {
     throw new UnauthorizedError('Unauthorized');
   }
 
-  const { userId } = verifyAccessToken(accessToken);
-  const user = await usersRepository.getUser(userId);
-  if (!user) {
-    throw new UnauthorizedError('Unauthorized');
+  try {
+    const { userId } = verifyAccessToken(accessToken);
+    const user = await usersRepository.getUser(userId);
+    if (!user) {
+      throw new UnauthorizedError('Unauthorized');
+    }
+    return user;
+  } catch (error) {
+    // JWT 검증 오류를 UnauthorizedError로 변환
+    if (
+      error instanceof Error &&
+      (error.name === 'JsonWebTokenError' ||
+        error.name === 'TokenExpiredError' ||
+        error.name === 'NotBeforeError')
+    ) {
+      throw new UnauthorizedError('Unauthorized');
+    }
+    // UnauthorizedError가 이미 throw된 경우 그대로 전달
+    if (error instanceof UnauthorizedError) {
+      throw error;
+    }
+    throw error;
   }
-  return user;
 }

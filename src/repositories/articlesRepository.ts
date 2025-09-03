@@ -30,7 +30,7 @@ export async function getArticleWithLkes(id: number, { userId }: { userId?: numb
     ...article,
     likes: undefined,
     likeCount: article.likes.length,
-    isLiked: userId ? article.likes.some((like) => like.userId === userId) : undefined,
+    isLiked: userId ? article.likes.some((like) => like.userId === userId) : false,
   };
 }
 
@@ -61,7 +61,7 @@ export async function getArticleListWithLikes(
     ...article,
     likes: undefined,
     likeCount: article.likes.length,
-    isLiked: userId ? article.likes.some((like) => like.userId === userId) : undefined,
+    isLiked: userId ? article.likes.some((like) => like.userId === userId) : false,
   }));
 
   return {
