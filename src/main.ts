@@ -31,6 +31,22 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(STATIC_PATH, express.static(path.resolve(process.cwd(), PUBLIC_PATH)));
 
+app.get('/api', (req, res) => {
+  res.json({
+    message: '판다마켓 API 서버입니다',
+    version: '1.0.0',
+    endpoints: {
+      articles: '/articles',
+      products: '/products',
+      comments: '/comments',
+      images: '/images',
+      auth: '/auth',
+      users: '/users',
+      notifications: '/notifications',
+    },
+  });
+});
+
 app.use('/articles', articlesRouter);
 app.use('/products', productsRouter);
 app.use('/comments', commentsRouter);
