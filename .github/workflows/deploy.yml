@@ -66,24 +66,21 @@ jobs:
 
   # 배포 작업
   deploy:
-    needs: test # 테스트 성공 후에만 배포
+    needs: test
     runs-on: ubuntu-latest
-
     steps:
-      - name: 🚀 Deploy to EC2
-        run: |
+      - name: Deploy to AWS
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.AWS_HOST }}
+          username: ubuntu
+          key: ${{ secrets.AWS_PRIVATE_KEY }}
 
-
-          cd ~/pandamarket
-          git pull origin main
-
-          # 프로덕션 의존성만 설치
-          echo "📦 의존성 설치 중..."
-          npm ci --production
-
-
-          npx prisma migrate deploy 
-
-
-
-          pm2 reload all
+          script: |
+            set -e
+            cd /home/ubuntu/pandamarket
+            git pull
+            npm ci
+            npm run migrate
+            npm run build
+            pm2 reload all
