@@ -50,7 +50,8 @@ jobs:
         run: |
           echo "NODE_ENV=test" >> .env
           echo "DATABASE_URL=postgresql://testuser:testpass@localhost:5432/pandamarket_test" >> .env
-          echo "JWT_SECRET=test_jwt_secret_key_for_testing" >> .env
+          echo "JWT_ACCESS_TOKEN_SECRET=test_jwt_access_secret_key_for_testing" >> .env
+          echo "JWT_REFRESH_TOKEN_SECRET=test_jwt_refresh_secret_key_for_testing" >> .env
           echo "AWS_REGION=ap-northeast-2" >> .env
           echo "S3_BUCKET_NAME=test-bucket" >> .env
 
@@ -74,6 +75,8 @@ jobs:
         env:
           NODE_ENV: test
           DATABASE_URL: postgresql://testuser:testpass@localhost:5432/pandamarket_test
+          JWT_ACCESS_TOKEN_SECRET: test_jwt_access_secret_key_for_testing
+          JWT_REFRESH_TOKEN_SECRET: test_jwt_refresh_secret_key_for_testing
 
       # 통합 테스트 실행
       - name: 🔄 Run integration tests
@@ -81,6 +84,8 @@ jobs:
         env:
           NODE_ENV: test
           DATABASE_URL: postgresql://testuser:testpass@localhost:5432/pandamarket_test
+          JWT_ACCESS_TOKEN_SECRET: test_jwt_access_secret_key_for_testing
+          JWT_REFRESH_TOKEN_SECRET: test_jwt_refresh_secret_key_for_testing
 
       # 테스트 결과 코멘트 (PR에 표시)
       - name: 💬 Comment test results
