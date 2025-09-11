@@ -1,0 +1,250 @@
+name: Deploy to AWS EC2
+
+on:
+  push:
+    branches: [main]
+  # 수동 배포도 가능하도록 설정
+  workflow_dispatch:
+
+jobs:
+  # 테스트 먼저 실행
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: pandamarket_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🔐 Create .env file
+        run: |
+          echo "NODE_ENV=test" >> .env
+          echo "DATABASE_URL=postgresql://testuser:testpass@localhost:5432/pandamarket_test" >> .env
+          echo "JWT_ACCESS_TOKEN_SECRET=test_jwt_access_secret_key_for_testing" >> .env
+          echo "JWT_REFRESH_TOKEN_SECRET=test_jwt_refresh_secret_key_for_testing" >> .env
+          echo "AWS_REGION=ap-northeast-2" >> .env
+          echo "S3_BUCKET_NAME=test-bucket" >> .env
+
+      - name: 🗄️ Generate Prisma Client
+        run: npx prisma generate
+
+      - name: 🚀 Run migrations
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://testuser:testpass@localhost:5432/pandamarket_test
+
+      - name: 🧪 Run tests
+        run: npm test
+        env:
+          NODE_ENV: test
+          DATABASE_URL: postgresql://testuser:testpass@localhost:5432/pandamarket_test
+          JWT_ACCESS_TOKEN_SECRET: test_jwt_access_secret_key_for_testing
+          JWT_REFRESH_TOKEN_SECRET: test_jwt_refresh_secret_key_for_testing
+
+  # 배포 작업
+  deploy:
+    needs: test # 테스트 성공 후에만 배포
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🔨 Build TypeScript
+        run: npm run build
+
+      - name: 📋 Prepare deployment package
+        run: |
+          # 배포 패키지 디렉토리 생성
+          mkdir -p deploy-package
+
+          # 필요한 파일들 복사
+          cp -r build deploy-package/
+          cp package*.json deploy-package/
+          cp -r prisma deploy-package/
+          cp -r public deploy-package/ 2>/dev/null || true
+          cp ecosystem.config.js deploy-package/ 2>/dev/null || true
+          cp -r src/infra/ec2/ecosystem.config.js deploy-package/ 2>/dev/null || true
+
+          # 압축 (전송 속도 향상)
+          tar -czf deploy-package.tar.gz deploy-package/
+
+      - name: 🔑 Setup SSH
+        run: |
+          # SSH 디렉토리 생성
+          mkdir -p ~/.ssh
+
+          # SSH 키 설정
+          echo "${{ secrets.AWS_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+          # SSH 설정
+          cat >> ~/.ssh/config <<END
+          Host ec2-server
+            HostName ${{ secrets.AWS_HOST }}
+            User ${{ secrets.AWS_USERNAME }}
+            IdentityFile ~/.ssh/deploy_key
+            StrictHostKeyChecking no
+          END
+
+      - name: 🚀 Deploy to EC2
+        run: |
+          # 압축 파일 전송
+          scp deploy-package.tar.gz ec2-server:~/
+
+          # EC2에서 배포 스크립트 실행
+          ssh ec2-server << 'ENDSSH'
+            set -e  # 에러 발생 시 중단
+            
+            echo "🔄 배포 시작..."
+            
+            # 이전 백업 제거
+            rm -rf ~/panda-market-backup
+            
+            # 현재 버전 백업
+            if [ -d ~/panda-market ]; then
+              echo "📦 현재 버전 백업 중..."
+              cp -r ~/panda-market ~/panda-market-backup
+            fi
+            
+            # 새 버전 압축 해제
+            echo "📂 새 버전 압축 해제 중..."
+            tar -xzf deploy-package.tar.gz
+            rm deploy-package.tar.gz
+            
+            # 디렉토리 이동
+            rm -rf ~/panda-market-new
+            mv deploy-package ~/panda-market-new
+            
+            cd ~/panda-market-new
+            
+            # 프로덕션 의존성만 설치
+            echo "📦 의존성 설치 중..."
+            npm ci --production
+            
+            # Prisma 클라이언트 생성
+            echo "🗄️ Prisma 클라이언트 생성 중..."
+            npx prisma generate
+            
+            # 환경 변수 복사 (있는 경우)
+            if [ -f ~/panda-market/.env.production ]; then
+              echo "🔐 환경 변수 파일 복사 중..."
+              cp ~/panda-market/.env.production ~/panda-market-new/
+            elif [ -f ~/panda-market/.env ]; then
+              cp ~/panda-market/.env ~/panda-market-new/
+            fi
+            
+            # 로그 디렉토리 생성
+            mkdir -p ~/panda-market-new/logs
+            
+            # 데이터베이스 마이그레이션
+            echo "🚀 데이터베이스 마이그레이션 실행 중..."
+            cd ~/panda-market-new
+            npx prisma migrate deploy || {
+              echo "❌ 마이그레이션 실패! 이전 버전으로 롤백..."
+              rm -rf ~/panda-market-new
+              if [ -d ~/panda-market-backup ]; then
+                mv ~/panda-market-backup ~/panda-market
+              fi
+              exit 1
+            }
+            
+            # 새 버전으로 교체
+            echo "🔄 새 버전으로 교체 중..."
+            if [ -d ~/panda-market ]; then
+              rm -rf ~/panda-market
+            fi
+            mv ~/panda-market-new ~/panda-market
+            
+            cd ~/panda-market
+            
+            # ecosystem.config.js 파일 확인 및 사용
+            if [ -f src/infra/ec2/ecosystem.config.js ]; then
+              cp src/infra/ec2/ecosystem.config.js ecosystem.config.js
+            fi
+            
+            # PM2로 애플리케이션 재시작
+            echo "🚀 PM2로 애플리케이션 재시작 중..."
+            pm2 stop pandamarket-api 2>/dev/null || true
+            pm2 delete pandamarket-api 2>/dev/null || true
+            pm2 start ecosystem.config.js --env production
+            pm2 save
+            
+            # 헬스 체크
+            echo "🏥 헬스 체크 중..."
+            sleep 5
+            pm2 status pandamarket-api
+            
+            # 로그 확인 (최근 20줄)
+            echo "📋 최근 로그:"
+            pm2 logs pandamarket-api --lines 20 --nostream
+            
+            echo "✅ 배포 완료!"
+            echo "📊 PM2 상태:"
+            pm2 list
+            
+            # 정리
+            rm -rf ~/panda-market-backup
+          ENDSSH
+
+      - name: 🏥 Health Check
+        run: |
+          echo "서버 헬스 체크 중..."
+          sleep 10
+
+          # HTTP 헬스 체크 (포트 3000)
+          max_attempts=5
+          attempt=1
+
+          while [ $attempt -le $max_attempts ]; do
+            if curl -f -s -o /dev/null -w "%{http_code}" http://${{ secrets.AWS_HOST }}:3000/health 2>/dev/null | grep -q "200\|404"; then
+              echo "✅ 서버가 정상적으로 실행 중입니다!"
+              break
+            else
+              echo "⏳ 대기 중... (시도 $attempt/$max_attempts)"
+              sleep 5
+              attempt=$((attempt + 1))
+            fi
+          done
+
+          if [ $attempt -gt $max_attempts ]; then
+            echo "⚠️ 헬스 체크 실패 - 서버 상태를 확인해주세요"
+          fi
+
+      - name: 🧹 Cleanup
+        if: always()
+        run: |
+          rm -rf ~/.ssh/deploy_key
+          rm -f deploy-package.tar.gz
