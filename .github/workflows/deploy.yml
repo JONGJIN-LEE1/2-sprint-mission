@@ -81,6 +81,6 @@ jobs:
             cd /home/ubuntu/pandamarket
             git pull
             npm ci
-            npm run migrate deploy
+            npx prisma migrate deploy
             npm run build
             pm2 reload all
