@@ -150,6 +150,17 @@ jobs:
             
             cd ~/panda-market-new
             
+            # 환경 변수 먼저 복사 (마이그레이션 전에 필요!)
+            if [ -f ~/.env.production ]; then
+              echo "🔐 환경 변수 파일 복사 중 (홈 디렉토리)..."
+              cp ~/.env.production ~/panda-market-new/.env.production
+            elif [ -f ~/panda-market/.env.production ]; then
+              echo "🔐 환경 변수 파일 복사 중 (이전 버전)..."
+              cp ~/panda-market/.env.production ~/panda-market-new/.env.production
+            elif [ -f ~/panda-market/.env ]; then
+              cp ~/panda-market/.env ~/panda-market-new/.env
+            fi
+            
             # 프로덕션 의존성만 설치
             echo "📦 의존성 설치 중..."
             npm ci --production
@@ -157,14 +168,6 @@ jobs:
             # Prisma 클라이언트 생성
             echo "🗄️ Prisma 클라이언트 생성 중..."
             npx prisma generate
-            
-            # 환경 변수 복사 (있는 경우)
-            if [ -f ~/panda-market/.env.production ]; then
-              echo "🔐 환경 변수 파일 복사 중..."
-              cp ~/panda-market/.env.production ~/panda-market-new/
-            elif [ -f ~/panda-market/.env ]; then
-              cp ~/panda-market/.env ~/panda-market-new/
-            fi
             
             # 로그 디렉토리 생성
             mkdir -p ~/panda-market-new/logs
