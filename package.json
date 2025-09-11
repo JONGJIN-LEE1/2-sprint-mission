@@ -7,7 +7,8 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:integration": "jest integration",
-    "test:unit": "jest unit"
+    "test:unit": "jest unit",
+    "start:prod": "prisma migrate deploy && node ./build/main.js"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",
