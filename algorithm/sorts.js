@@ -23,16 +23,16 @@ function selectionSort(nums) {
 }
 
 // 테스트 코드
-console.log('=== 선택 정렬 테스트 ===');
+console.log("=== 선택 정렬 테스트 ===");
 const nums1 = [3, 1, 2];
-console.log('정렬 전:', nums1); // [3, 1, 2]
+console.log("정렬 전:", nums1); // [3, 1, 2]
 selectionSort(nums1);
-console.log('정렬 후:', nums1); // [1, 2, 3]
+console.log("정렬 후:", nums1); // [1, 2, 3]
 
 const nums2 = [64, 25, 12, 22, 11];
-console.log('\n정렬 전:', nums2);
+console.log("\n정렬 전:", nums2);
 selectionSort(nums2);
-console.log('정렬 후:', nums2); // [11, 12, 22, 25, 64]
+console.log("정렬 후:", nums2); // [11, 12, 22, 25, 64]
 
 /**
  * 삽입 정렬 (Insertion Sort)
@@ -59,16 +59,16 @@ function insertionSort(nums) {
 }
 
 // 테스트 코드
-console.log('\n=== 삽입 정렬 테스트 ===');
+console.log("\n=== 삽입 정렬 테스트 ===");
 const nums3 = [3, 1, 2];
-console.log('정렬 전:', nums3); // [3, 1, 2]
+console.log("정렬 전:", nums3); // [3, 1, 2]
 insertionSort(nums3);
-console.log('정렬 후:', nums3); // [1, 2, 3]
+console.log("정렬 후:", nums3); // [1, 2, 3]
 
 const nums4 = [64, 25, 12, 22, 11];
-console.log('\n정렬 전:', nums4);
+console.log("\n정렬 전:", nums4);
 insertionSort(nums4);
-console.log('정렬 후:', nums4); // [11, 12, 22, 25, 64]
+console.log("정렬 후:", nums4); // [11, 12, 22, 25, 64]
 
 /**
  * 병합 정렬 (Merge Sort)
@@ -119,17 +119,17 @@ function merge(left, right) {
 }
 
 // 테스트 코드
-console.log('\n=== 병합 정렬 테스트 ===');
+console.log("\n=== 병합 정렬 테스트 ===");
 const nums5 = [3, 1, 2];
-console.log('정렬 전:', nums5); // [3, 1, 2]
+console.log("정렬 전:", nums5); // [3, 1, 2]
 const sorted5 = mergeSort(nums5);
-console.log('정렬 후:', sorted5); // [1, 2, 3]
-console.log('원본 배열:', nums5); // [3, 1, 2] - 원본은 변경되지 않음
+console.log("정렬 후:", sorted5); // [1, 2, 3]
+console.log("원본 배열:", nums5); // [3, 1, 2] - 원본은 변경되지 않음
 
 const nums6 = [64, 25, 12, 22, 11];
-console.log('\n정렬 전:', nums6);
+console.log("\n정렬 전:", nums6);
 const sorted6 = mergeSort(nums6);
-console.log('정렬 후:', sorted6); // [11, 12, 22, 25, 64]
+console.log("정렬 후:", sorted6); // [11, 12, 22, 25, 64]
 
 /**
  * 퀵 정렬 (Quick Sort)
@@ -181,17 +181,20 @@ function partition(nums, left, right) {
 }
 
 // 테스트 코드
-console.log('\n=== 퀵 정렬 테스트 ===');
+console.log("\n=== 퀵 정렬 테스트 ===");
 const nums7 = [3, 1, 2];
-console.log('정렬 전:', nums7); // [3, 1, 2]
+console.log("정렬 전:", nums7); // [3, 1, 2]
 quickSort(nums7);
-console.log('정렬 후:', nums7); // [1, 2, 3]
+console.log("정렬 후:", nums7); // [1, 2, 3]
 
 const nums8 = [64, 25, 12, 22, 11];
-console.log('\n정렬 전:', nums8);
+console.log("\n정렬 전:", nums8);
 quickSort(nums8);
-console.log('정렬 후:', nums8); // [11, 12, 22, 25, 64]
+console.log("정렬 후:", nums8); // [11, 12, 22, 25, 64]
 
 module.exports = {
   selectionSort,
+  insertionSort,
+  mergeSort,
+  quickSort,
 };
